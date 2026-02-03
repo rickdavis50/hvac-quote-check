@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  background-color: #fefefe;
+}
+
+html,
+body,
+#root {
+  min-height: 100vh;
+  background: #fefefe;
+  color: #111111;
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+* {
+  scrollbar-color: #cfcfcf #fefefe;
+}
