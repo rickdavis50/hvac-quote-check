@@ -1,4 +1,4 @@
-import type { AnalysisResult, QuoteSubmission } from '../types.js';
+import type { AnalysisResult, QuoteSubmission, SystemType } from '../types.js';
 import { extractText } from './extraction.js';
 import { extractHeuristic } from './heuristicExtraction.js';
 import { extractWithLlm } from './llmExtraction.js';
@@ -82,7 +82,7 @@ export async function recomputeQuote(
     contractorName: corrected.contractorName as string | null,
     quotedTotal: submission.analysisResult.quotedTotal,
     jobType: corrected.jobType as string,
-    systemType: corrected.systemType as string,
+    systemType: corrected.systemType as SystemType,
     equipmentBrand: corrected.equipmentBrand as string | null,
     seer2: corrected.seer2 as number | null,
     tonnage: corrected.tonnage as number | null,
