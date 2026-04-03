@@ -1,18 +1,32 @@
 import 'dotenv/config';
 import express from 'express';
+import quotesRouter from './routes/quotes.js';
+import paymentsRouter from './routes/payments.js';
+import adminRouter from './routes/admin.js';
+import { getKbStats } from './lib/knowledgeBase.js';
 
 const app = express();
-const PORT = parseInt(process.env.PORT || '5178', 10);
 
+// Payment routes go first (webhook needs raw body)
+app.use('/api', paymentsRouter);
+
+// JSON parsing for everything else
 app.use(express.json());
 
+app.use('/api/quotes', quotesRouter);
+app.use('/api/admin', adminRouter);
+
+const PORT = parseInt(process.env.PORT || '5178', 10);
+
 app.get('/api/health', (_req, res) => {
+  const kbStats = getKbStats();
   res.json({
     ok: true,
     services: {
       claude: !!process.env.ANTHROPIC_API_KEY,
       stripe: !!process.env.STRIPE_SECRET_KEY,
     },
+    kb: kbStats,
   });
 });
 
