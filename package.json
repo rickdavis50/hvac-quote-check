@@ -1,15 +1,46 @@
 {
-  "name": "hvac-quote-check",
-  "private": true,
+  "name": "hvac-price-agent",
   "version": "0.1.0",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
-    "dev:client": "npm --prefix client run dev",
-    "dev:server": "npm --prefix server run dev",
-    "build": "npm --prefix client run build && npm --prefix server run build",
-    "start": "npm --prefix server run start"
+    "dev": "concurrently \"vite\" \"tsx watch server/index.ts\"",
+    "dev:client": "vite",
+    "dev:server": "tsx watch server/index.ts",
+    "build": "vite build && tsc -p tsconfig.server.json",
+    "seed": "tsx scripts/seed-knowledge-base.ts",
+    "eval:extraction": "tsx evals/extraction.test.ts",
+    "eval:analysis": "tsx evals/analysis.test.ts",
+    "eval:gates": "tsx evals/validation.test.ts",
+    "eval:e2e": "tsx evals/e2e.test.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "express": "^5.1.0",
+    "multer": "^2.0.0",
+    "pdf-parse": "^1.1.1",
+    "stripe": "^17.0.0",
+    "tesseract.js": "^5.1.1",
+    "uuid": "^11.1.0",
+    "zod": "^3.24.0",
+    "dotenv": "^16.4.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "concurrently": "^9.0.0"
+    "@types/express": "^5.0.0",
+    "@types/multer": "^1.4.12",
+    "@types/pdf-parse": "^1.1.4",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@types/uuid": "^10.0.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "autoprefixer": "^10.4.0",
+    "concurrently": "^9.1.0",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vite": "^5.4.0"
   }
 }
