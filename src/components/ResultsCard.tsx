@@ -69,7 +69,7 @@ export default function ResultsCard({ result, onCorrections, onUnlock, correctin
       )}
 
       {/* Editable Fields */}
-      <EditableFields data={extractedData} onSave={onCorrections} saving={correcting} />
+      <EditableFields key={result.submissionId} data={extractedData} onSave={onCorrections} saving={correcting} />
     </div>
   );
 }

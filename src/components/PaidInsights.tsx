@@ -1,6 +1,5 @@
 import type { PaidInsights as PaidInsightsType } from '../types';
-import { formatMoney } from '../lib/format';
-import { titleCase } from '../lib/format';
+import { formatMoney, titleCase } from '../lib/format';
 
 interface Props {
   insights: PaidInsightsType;

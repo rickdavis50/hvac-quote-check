@@ -10,7 +10,7 @@ interface Props {
 export default function FairRangeBar({ low, mid, high, quoted }: Props) {
   const min = Math.min(low * 0.8, quoted * 0.9);
   const max = Math.max(high * 1.2, quoted * 1.1);
-  const range = max - min;
+  const range = max - min || 1;
 
   const lowPct = ((low - min) / range) * 100;
   const highPct = ((high - min) / range) * 100;
