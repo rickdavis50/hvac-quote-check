@@ -1,0 +1,19 @@
+{
+  "description": "Standard heat pump replacement quote from sample text",
+  "inputText": "ABC Heating & Cooling\n123 Main St, Austin TX 78701\n\nEstimate for: Heat Pump Replacement\n\nCarrier 25VNA036A003 - 3 Ton 18 SEER2 Heat Pump\nEquipment: $5,200.00\nLabor & Installation: $3,800.00\nDuctwork Modifications: $2,100.00\nElectrical Panel Upgrade: $1,400.00\nPermits & Inspections: $450.00\n\nTotal: $12,950.00\n\n10 Year Warranty Included",
+  "expected": {
+    "contractorName": "ABC Heating & Cooling",
+    "quotedTotal": 12950,
+    "jobType": "replacement",
+    "systemType": "central_heat_pump",
+    "equipmentBrand": "Carrier",
+    "seer2": 18,
+    "tonnage": 3,
+    "zipCode": "78701",
+    "warrantyYears": 10,
+    "permitsIncluded": true,
+    "ductworkIncluded": true,
+    "electricalIncluded": true,
+    "lineItemCount": 5
+  }
+}
