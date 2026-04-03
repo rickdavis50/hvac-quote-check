@@ -1,187 +1,133 @@
-import type { CanonicalQuoteExtraction, QuoteLineItem, QualityTier, SystemType } from '../types.js';
+import { BRAND_TIERS } from '../../data/baselines.js';
 
-const BRAND_PATTERNS: Array<{ brand: string; tier: QualityTier; regex: RegExp }> = [
-  { brand: 'Carrier', tier: 'premium', regex: /\bcarrier\b/i },
-  { brand: 'Daikin', tier: 'premium', regex: /\bdaikin\b/i },
-  { brand: 'Goodman', tier: 'budget', regex: /\bgoodman\b/i },
-  { brand: 'Lennox', tier: 'premium', regex: /\blennox\b/i },
-  { brand: 'Mitsubishi', tier: 'premium', regex: /\bmitsubishi\b/i },
-  { brand: 'Rheem', tier: 'standard', regex: /\brheem\b/i },
-  { brand: 'Trane', tier: 'premium', regex: /\btrane\b/i },
-  { brand: 'Bryant', tier: 'standard', regex: /\bbryant\b/i },
-  { brand: 'York', tier: 'standard', regex: /\byork\b/i }
-];
+export interface HeuristicResult {
+  contractorName: string | null;
+  quotedTotal: number | null;
+  jobType: string | null;
+  systemType: string | null;
+  equipmentBrand: string | null;
+  seer2: number | null;
+  tonnage: number | null;
+  qualityTierHint: string | null;
+  zipCode: string | null;
+  warrantyYears: number | null;
+  permitsIncluded: boolean;
+  ductworkIncluded: boolean;
+  electricalIncluded: boolean;
+  lineItems: Array<{ category: string; description: string; amount: number }>;
+  confidence: number;
+}
 
-const parseCurrency = (token: string): number | null => {
-  const normalized = token.replace(/[$,\s]/g, '');
-  const value = Number(normalized);
-  return Number.isFinite(value) ? value : null;
-};
-
-const normalizeWhitespace = (rawText: string): string =>
-  rawText
-    .replace(/\r/g, '\n')
-    .replace(/[ \t]+/g, ' ')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-
-const detectSystemType = (text: string): SystemType | null => {
-  if (/ductless|mini[\s-]?split/i.test(text)) return 'mini_split';
-  if (/package unit|rooftop unit|rtu/i.test(text)) return 'package_unit';
-  if (/heat pump/i.test(text) && /air handler|split/i.test(text)) return 'heat_pump_split';
-  if (/heat pump/i.test(text)) return 'central_heat_pump';
-  if (/furnace/i.test(text) && /ac|air conditioner|condens/i.test(text)) return 'furnace_ac_split';
-  if (/furnace only|gas furnace/i.test(text)) return 'furnace_only';
-  if (/ac replacement|air conditioner|condens/i.test(text)) return 'ac_only';
-  return null;
-};
-
-const detectJobType = (text: string): CanonicalQuoteExtraction['job_type'] => {
-  if (/maintenance|tune-up|service agreement/i.test(text)) return 'maintenance';
-  if (/repair|diagnostic|capacitor|contactor/i.test(text)) return 'repair';
-  if (/ductless|mini[\s-]?split/i.test(text)) return 'ductless_install';
-  if (/heat pump conversion|heat pump install|whole-home heat pump/i.test(text)) return 'heat_pump_install';
-  if (/replace existing|replacement|remove existing/i.test(text) && /furnace|air handler|condenser|heat pump/i.test(text)) {
-    return 'full_system_replacement';
-  }
-  if (/coil only|condenser only|furnace only|partial/i.test(text)) return 'partial_replacement';
-  return 'other';
-};
-
-const detectZip = (text: string): string | null => {
-  const contextual = text.match(/(?:zip|zipcode|customer zip|project zip|service address|job address)[^\d]{0,20}(\d{5})/i);
-  if (contextual) return contextual[1];
-  const fallback = text.match(/\b(\d{5})(?:-\d{4})?\b/);
-  return fallback?.[1] ?? null;
-};
-
-const detectQuotedTotal = (text: string, lineItems: QuoteLineItem[]): number | null => {
-  const totalLine = text
-    .split('\n')
-    .map((line) => line.trim())
-    .find((line) => /grand total|project total|total investment|estimated total|grand total|final total|total/i.test(line));
-
-  if (totalLine) {
-    const amountMatch = totalLine.match(/\$?\s?\d[\d,]*(?:\.\d{2})?/);
-    if (amountMatch) {
-      const parsed = parseCurrency(amountMatch[0]);
-      if (parsed !== null) return parsed;
-    }
-  }
-
-  const amounts = lineItems.map((item) => item.amount).filter((value): value is number => value !== null);
-  if (!amounts.length) return null;
-  return Math.max(...amounts, amounts.reduce((sum, amount) => sum + amount, 0));
-};
-
-const detectTonnage = (text: string): number | null => {
-  const tonnageMatch = text.match(/(\d(?:\.\d)?)\s*(ton|tons)\b/i);
-  if (tonnageMatch) return Number(tonnageMatch[1]);
-  const btuMatch = text.match(/(\d{2,3})[, ]?(\d{3})\s*btu/i);
-  if (!btuMatch) return null;
-  const btu = Number(`${btuMatch[1]}${btuMatch[2]}`);
-  if (!Number.isFinite(btu)) return null;
-  return Number((btu / 12000).toFixed(1));
-};
-
-const detectSeer2 = (text: string): number | null => {
-  const seer2Match = text.match(/seer\s*2\s*[:\-]?\s*(\d{2}(?:\.\d+)?)/i);
-  if (seer2Match) return Number(seer2Match[1]);
-  const seerMatch = text.match(/\bseer\s*[:\-]?\s*(\d{2}(?:\.\d+)?)/i);
-  return seerMatch ? Number(seerMatch[1]) : null;
-};
-
-const detectWarrantyYears = (text: string, type: 'parts' | 'labor'): number | null => {
-  const match = text.match(new RegExp(`(\\d{1,2})\\s*[- ]?year\\s*${type}`, 'i'));
-  return match ? Number(match[1]) : null;
-};
-
-const detectBoolean = (text: string, pattern: RegExp): boolean | null => (pattern.test(text) ? true : null);
-
-const detectReplacementType = (text: string): CanonicalQuoteExtraction['replacement_type'] => {
-  if (/new install|new construction|first-time install/i.test(text)) return 'new_install';
-  if (/replace|replacement|remove existing/i.test(text)) return 'replacement';
-  return 'unknown';
-};
-
-const detectInstallDifficulty = (text: string): NonNullable<CanonicalQuoteExtraction['install_difficulty']> => {
-  if (/crane|historic home|tight attic|limited access|structural/i.test(text)) return 'complex';
-  if (/easy access|straight swap|ground level/i.test(text)) return 'easy';
-  return 'standard';
-};
-
-const detectSystemsCount = (text: string): number => {
-  const explicit = text.match(/(\d)\s*(systems|units|zones)\b/i);
-  if (explicit) return Number(explicit[1]);
-  if (/multi-zone|two zone|dual zone/i.test(text)) return 2;
-  return 1;
-};
-
-const detectContractorName = (text: string): string | null => {
-  const firstLine = text.split('\n').map((line) => line.trim()).find(Boolean);
-  return firstLine && firstLine.length < 80 ? firstLine : null;
-};
-
-const extractLineItems = (text: string): QuoteLineItem[] =>
-  text
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line): QuoteLineItem | null => {
-      const amountMatch = line.match(/\$?\s?\d[\d,]*(?:\.\d{2})?/);
-      if (!amountMatch) return null;
-      const amount = parseCurrency(amountMatch[0]);
-      if (amount === null) return null;
-
-      let category = 'equipment';
-      if (/permit|inspection/i.test(line)) category = 'permit';
-      if (/duct/i.test(line)) category = 'ductwork';
-      if (/electrical|panel|breaker|disconnect/i.test(line)) category = 'electrical';
-      if (/labor|install|commission|haul-away|startup/i.test(line)) category = 'labor';
-
-      return {
-        category,
-        description: line.replace(amountMatch[0], '').replace(/\.+/g, ' ').trim() || 'Line item',
-        amount
-      };
-    })
-    .filter((item): item is QuoteLineItem => item !== null);
-
-export const heuristicExtractQuote = (rawText: string): CanonicalQuoteExtraction => {
-  const normalized = normalizeWhitespace(rawText);
-  const lower = normalized.toLowerCase();
-  const lineItems = extractLineItems(normalized);
-  const brandHit = BRAND_PATTERNS.find((entry) => entry.regex.test(lower));
-  const filledFields = [
-    detectContractorName(normalized),
-    detectQuotedTotal(normalized, lineItems),
-    detectSystemType(lower),
-    detectJobType(lower),
-    brandHit?.brand ?? null,
-    detectSeer2(lower),
-    detectTonnage(lower),
-    detectZip(normalized)
-  ].filter((value) => value !== null).length;
+export function extractHeuristic(text: string): HeuristicResult {
+  const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
 
   return {
-    contractor_name: detectContractorName(normalized),
-    quoted_total: detectQuotedTotal(normalized, lineItems),
-    job_type: detectJobType(lower),
-    system_type: detectSystemType(lower),
-    equipment_brand: brandHit?.brand ?? null,
-    seer2: detectSeer2(lower),
-    tonnage: detectTonnage(lower),
-    permits_included: detectBoolean(lower, /permit|inspection|hers/i),
-    ductwork_included: detectBoolean(lower, /duct|plenum|return grille/i),
-    electrical_included: detectBoolean(lower, /electrical|breaker|subpanel|disconnect/i),
-    labor_warranty_years: detectWarrantyYears(lower, 'labor'),
-    parts_warranty_years: detectWarrantyYears(lower, 'parts'),
-    line_items: lineItems,
-    zip_code: detectZip(normalized),
-    quality_tier_hint: brandHit?.tier ?? null,
-    replacement_type: detectReplacementType(lower),
-    install_difficulty: detectInstallDifficulty(lower),
-    systems_count: detectSystemsCount(lower),
-    confidence_extraction: Math.min(0.9, Math.max(0.35, filledFields / 10))
+    contractorName: extractContractorName(lines),
+    quotedTotal: extractTotal(text),
+    jobType: extractJobType(text),
+    systemType: extractSystemType(text),
+    equipmentBrand: extractBrand(text),
+    seer2: extractNumber(text, /(\d{1,2}(?:\.\d)?)\s*seer2?/i),
+    tonnage: extractNumber(text, /(\d(?:\.\d)?)\s*(?:ton|tons)/i),
+    qualityTierHint: null,
+    zipCode: extractZip(text),
+    warrantyYears: extractNumber(text, /(\d{1,2})\s*(?:year|yr)s?\s*warranty/i),
+    permitsIncluded: /permit/i.test(text),
+    ductworkIncluded: /duct\s*work|ductwork|duct\s*modification/i.test(text),
+    electricalIncluded: /electrical\s*(?:work|upgrade|panel|wiring)/i.test(text),
+    lineItems: extractLineItems(text),
+    confidence: 0.4,
   };
-};
+}
+
+function extractContractorName(lines: string[]): string | null {
+  if (lines.length === 0) return null;
+  const first = lines[0];
+  if (first.length > 5 && first.length < 80 && !/\$|total|estimate|quote|invoice/i.test(first)) {
+    return first;
+  }
+  return null;
+}
+
+function extractTotal(text: string): number | null {
+  const patterns = [
+    /(?:total|grand\s*total|amount\s*due|balance\s*due)[:\s]*\$?([\d,]+(?:\.\d{2})?)/i,
+    /\$\s*([\d,]+(?:\.\d{2})?)\s*(?:total)/i,
+  ];
+  for (const pat of patterns) {
+    const match = text.match(pat);
+    if (match) return parseFloat(match[1].replace(/,/g, ''));
+  }
+  const amounts = [...text.matchAll(/\$([\d,]+(?:\.\d{2})?)/g)]
+    .map((m) => parseFloat(m[1].replace(/,/g, '')))
+    .filter((n) => n >= 1000 && n <= 80000);
+  if (amounts.length > 0) return Math.max(...amounts);
+  return null;
+}
+
+function extractJobType(text: string): string | null {
+  if (/replacement|replace|swap/i.test(text)) return 'replacement';
+  if (/new\s*install|new\s*construction|new\s*system/i.test(text)) return 'new_install';
+  if (/repair|fix|service\s*call/i.test(text)) return 'repair';
+  if (/maintenance|tune.?up|inspection/i.test(text)) return 'maintenance';
+  return null;
+}
+
+function extractSystemType(text: string): string | null {
+  if (/mini.?split|ductless/i.test(text)) return 'mini_split';
+  if (/heat\s*pump.*split|split.*heat\s*pump/i.test(text)) return 'heat_pump_split';
+  if (/heat\s*pump/i.test(text)) return 'central_heat_pump';
+  if (/furnace.*(?:ac|air\s*condition)|(?:ac|air\s*condition).*furnace/i.test(text)) return 'furnace_ac_split';
+  if (/(?:^|\s)(?:ac|air\s*condition(?:er|ing))\s/i.test(text)) return 'ac_only';
+  if (/furnace/i.test(text)) return 'furnace_only';
+  if (/package\s*unit|packaged/i.test(text)) return 'package_unit';
+  return null;
+}
+
+function extractBrand(text: string): string | null {
+  const brandNames = Object.keys(BRAND_TIERS);
+  const lower = text.toLowerCase();
+  for (const brand of brandNames) {
+    if (lower.includes(brand)) return brand.charAt(0).toUpperCase() + brand.slice(1);
+  }
+  return null;
+}
+
+function extractNumber(text: string, pattern: RegExp): number | null {
+  const match = text.match(pattern);
+  if (match) return parseFloat(match[1]);
+  return null;
+}
+
+function extractZip(text: string): string | null {
+  const match = text.match(/\b(\d{5})(?:-\d{4})?\b/);
+  return match ? match[1] : null;
+}
+
+function extractLineItems(text: string): Array<{ category: string; description: string; amount: number }> {
+  const items: Array<{ category: string; description: string; amount: number }> = [];
+  const linePattern = /^(.+?)\s+\$?([\d,]+(?:\.\d{2})?)\s*$/gm;
+  let match;
+  while ((match = linePattern.exec(text)) !== null) {
+    const description = match[1].trim();
+    const amount = parseFloat(match[2].replace(/,/g, ''));
+    if (amount >= 50 && amount <= 50000 && description.length > 3) {
+      items.push({
+        category: categorizeLineItem(description),
+        description,
+        amount,
+      });
+    }
+  }
+  return items;
+}
+
+function categorizeLineItem(description: string): string {
+  const lower = description.toLowerCase();
+  if (/equip|unit|system|condenser|compressor|handler|coil|heat\s*pump/i.test(lower)) return 'equipment';
+  if (/labor|install|work/i.test(lower)) return 'labor';
+  if (/duct/i.test(lower)) return 'ductwork';
+  if (/electr|panel|wiring|circuit|breaker/i.test(lower)) return 'electrical';
+  if (/permit/i.test(lower)) return 'permit';
+  return 'other';
+}
