@@ -8,6 +8,7 @@
     "dev:client": "vite",
     "dev:server": "tsx watch server/index.ts",
     "build": "vite build && tsc -p tsconfig.server.json",
+    "start": "node dist/server/server/index.js",
     "seed": "tsx scripts/seed-knowledge-base.ts",
     "eval:extraction": "tsx evals/extraction.test.ts",
     "eval:analysis": "tsx evals/analysis.test.ts",
