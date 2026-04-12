@@ -13,6 +13,9 @@ const SYSTEM_TYPES = [
   'furnace_ac_split', 'ac_only', 'furnace_only', 'package_unit', 'other',
 ];
 
+const SEER2_OPTIONS = [13, 14, 14.3, 15, 15.2, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25];
+const TONNAGE_OPTIONS = [1, 1.5, 2, 2.5, 3, 3.5, 4, 5];
+
 export default function EditableFields({ data, onSave, saving }: Props) {
   const [editing, setEditing] = useState(false);
   const [fields, setFields] = useState({
@@ -86,13 +89,19 @@ export default function EditableFields({ data, onSave, saving }: Props) {
         </label>
         <label className="space-y-1">
           <span className="text-gray-500">Tonnage</span>
-          <input type="number" step="0.5" value={fields.tonnage} onChange={(e) => setFields({ ...fields, tonnage: e.target.value ? Number(e.target.value) : '' })}
-            className="block w-full border rounded px-2 py-1" />
+          <select value={fields.tonnage} onChange={(e) => setFields({ ...fields, tonnage: e.target.value ? Number(e.target.value) : '' })}
+            className="block w-full border rounded px-2 py-1">
+            <option value="">Unknown</option>
+            {TONNAGE_OPTIONS.map((t) => <option key={t} value={t}>{t} Ton</option>)}
+          </select>
         </label>
         <label className="space-y-1">
           <span className="text-gray-500">SEER2</span>
-          <input type="number" step="0.1" value={fields.seer2} onChange={(e) => setFields({ ...fields, seer2: e.target.value ? Number(e.target.value) : '' })}
-            className="block w-full border rounded px-2 py-1" />
+          <select value={fields.seer2} onChange={(e) => setFields({ ...fields, seer2: e.target.value ? Number(e.target.value) : '' })}
+            className="block w-full border rounded px-2 py-1">
+            <option value="">Unknown</option>
+            {SEER2_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
         </label>
         <label className="space-y-1">
           <span className="text-gray-500">Quality Tier</span>
