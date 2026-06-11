@@ -3,7 +3,10 @@ import { join, dirname } from 'path';
 import type { RawQuote } from '../types.js';
 import { v4 as uuid } from 'uuid';
 
-const KB_DIR = join(process.cwd(), 'knowledge');
+// Benchmark knowledge base. Point HVAC_KNOWLEDGE_DIR at a mounted volume in
+// production so accumulated user quotes survive redeploys (seed data ships in
+// the image at the default path).
+const KB_DIR = process.env.HVAC_KNOWLEDGE_DIR || join(process.cwd(), 'knowledge');
 const RAW_DIR = join(KB_DIR, 'raw');
 const COMPILED_DIR = join(KB_DIR, 'compiled');
 

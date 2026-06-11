@@ -33,6 +33,13 @@ export interface PaidInsights {
   detailedExplanation: string;
 }
 
+export interface PricingFactor {
+  label: string;
+  detail: string;
+  multiplier: number;
+  amount?: number;
+}
+
 export interface AnalysisResult {
   submissionId: string;
   rating: 'Low' | 'Fair' | 'High';
@@ -48,6 +55,17 @@ export interface AnalysisResult {
     geographyPrecision: string;
     dataRecency: string;
   };
+
+  pricing: {
+    methodologyVersion: string;
+    factors: PricingFactor[];
+    marketContext: {
+      metroName: string | null;
+      compositeIndex: number;
+      comparableCount: number;
+    };
+  };
+  generatedAt: string;
 
   paidInsights: PaidInsights | null;
 }

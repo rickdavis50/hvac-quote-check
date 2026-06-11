@@ -3,7 +3,7 @@ import { join } from 'path';
 import type { RawQuote, ValidationResult } from '../types.js';
 import { COMPONENT_RANGES } from '../../data/baselines.js';
 
-const KB_RAW_DIR = join(process.cwd(), 'knowledge', 'raw');
+const KB_RAW_DIR = join(process.env.HVAC_KNOWLEDGE_DIR || join(process.cwd(), 'knowledge'), 'raw');
 
 export function validateForKnowledgeBase(quote: Omit<RawQuote, 'id' | 'timestamp' | 'source' | 'trust'>): ValidationResult {
   const failures: string[] = [];

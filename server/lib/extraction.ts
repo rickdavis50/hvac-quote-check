@@ -1,38 +1,44 @@
 import pdfParse from 'pdf-parse';
-import Tesseract from 'tesseract.js';
 
-export async function extractText(
-  buffer: Buffer,
-  mimeType: string
-): Promise<{ text: string; method: 'pdf' | 'ocr' | 'text' }> {
+export interface ExtractionInput {
+  /** Raw text when the source is text or a text-layer PDF. */
+  text: string | null;
+  method: 'text' | 'pdf' | 'image';
+  /** Original document for Claude vision — lets scanned PDFs and photos work. */
+  document: { kind: 'pdf' | 'image'; mediaType: string; dataBase64: string } | null;
+}
+
+const IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif']);
+
+export async function prepareInput(buffer: Buffer, mimeType: string): Promise<ExtractionInput> {
   if (mimeType === 'text/plain') {
     const text = buffer.toString('utf-8').trim();
     if (!text) throw new Error('Empty text document');
-    return { text, method: 'text' };
+    return { text, method: 'text', document: null };
   }
+
   if (mimeType === 'application/pdf') {
-    return extractFromPdf(buffer);
+    let text: string | null = null;
+    try {
+      const parsed = await pdfParse(buffer);
+      text = parsed.text.trim() || null;
+    } catch {
+      text = null; // scanned/encrypted PDFs still go to Claude as a document block
+    }
+    return {
+      text,
+      method: 'pdf',
+      document: { kind: 'pdf', mediaType: 'application/pdf', dataBase64: buffer.toString('base64') },
+    };
   }
-  if (mimeType.startsWith('image/')) {
-    return extractFromImage(buffer);
+
+  if (IMAGE_TYPES.has(mimeType)) {
+    return {
+      text: null,
+      method: 'image',
+      document: { kind: 'image', mediaType: mimeType === 'image/jpg' ? 'image/jpeg' : mimeType, dataBase64: buffer.toString('base64') },
+    };
   }
+
   throw new Error(`Unsupported file type: ${mimeType}`);
-}
-
-async function extractFromPdf(buffer: Buffer): Promise<{ text: string; method: 'pdf' }> {
-  const result = await pdfParse(buffer);
-  const text = result.text.trim();
-  if (!text) {
-    throw new Error('PDF contained no extractable text');
-  }
-  return { text, method: 'pdf' };
-}
-
-async function extractFromImage(buffer: Buffer): Promise<{ text: string; method: 'ocr' }> {
-  const { data } = await Tesseract.recognize(buffer, 'eng');
-  const text = data.text.trim();
-  if (!text) {
-    throw new Error('OCR extracted no readable text from image');
-  }
-  return { text, method: 'ocr' };
 }

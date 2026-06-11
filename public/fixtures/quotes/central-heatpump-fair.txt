@@ -1,0 +1,14 @@
+Cascade Comfort Heating
+Customer ZIP: 98109
+Project: Replace existing central heat pump with matched air handler
+
+Equipment:
+- Bryant central heat pump condenser and air handler ........... $13,900
+- Refrigerant trim kit, pad, and disconnect .................... $1,200
+- Permit, startup, balancing, and commissioning ............... $950
+- Labor and haul-away .......................................... $5,750
+
+System size: 3 ton
+SEER2: 16.0
+Warranty: 10 year parts warranty
+Grand Total: $21,800

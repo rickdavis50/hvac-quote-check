@@ -3,9 +3,9 @@ interface Props {
 }
 
 const STYLES = {
-  Low: 'bg-green-100 text-green-800 border-green-200',
-  Fair: 'bg-blue-100 text-blue-800 border-blue-200',
-  High: 'bg-red-100 text-red-800 border-red-200',
+  Low: 'bg-rating-good/10 text-rating-good border-rating-good/20',
+  Fair: 'bg-warm-500/10 text-warm-700 border-warm-500/20',
+  High: 'bg-rating-high/10 text-rating-high border-rating-high/20',
 };
 
 const LABELS = {
@@ -16,7 +16,7 @@ const LABELS = {
 
 export default function RatingBadge({ rating }: Props) {
   return (
-    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold border ${STYLES[rating]}`}>
+    <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium border tracking-wide ${STYLES[rating]}`}>
       {LABELS[rating]}
     </span>
   );

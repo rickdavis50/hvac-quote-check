@@ -7,25 +7,25 @@ interface Props {
 
 export default function PaidInsights({ insights }: Props) {
   return (
-    <div className="space-y-6 bg-white border-2 border-green-200 rounded-lg p-6">
-      <h3 className="text-lg font-bold text-gray-900">Detailed Savings Report</h3>
+    <div className="space-y-8 bg-cream-50 border border-gold-500/20 rounded-2xl p-8">
+      <h3 className="font-serif text-2xl text-warm-900">Detailed Savings Report</h3>
 
       {/* Component Breakdown */}
       {insights.componentBreakdown.length > 0 && (
         <div>
-          <h4 className="font-semibold text-gray-800 mb-2">Component Breakdown</h4>
-          <div className="space-y-2">
+          <h4 className="text-xs uppercase tracking-widest text-warm-500 font-medium mb-3">Component Breakdown</h4>
+          <div className="space-y-3">
             {insights.componentBreakdown.map((comp, i) => (
-              <div key={i} className="flex items-center justify-between text-sm border-b pb-2">
+              <div key={i} className="flex items-center justify-between text-sm border-b border-cream-200 pb-3">
                 <div>
-                  <span className="font-medium">{titleCase(comp.category)}</span>
-                  <span className="text-gray-500 ml-2">
+                  <span className="font-medium text-warm-800">{titleCase(comp.category)}</span>
+                  <span className="text-warm-500 ml-2 font-light text-xs">
                     (typical: {formatMoney(comp.typicalRange.low)} - {formatMoney(comp.typicalRange.high)})
                   </span>
                 </div>
                 <div className="text-right">
-                  <span className="font-semibold">{formatMoney(comp.yourCost)}</span>
-                  <p className="text-xs text-gray-500">{comp.assessment}</p>
+                  <span className="font-serif text-lg text-warm-900">{formatMoney(comp.yourCost)}</span>
+                  <p className="text-xs text-warm-500 font-light">{comp.assessment}</p>
                 </div>
               </div>
             ))}
@@ -36,19 +36,19 @@ export default function PaidInsights({ insights }: Props) {
       {/* Comparable Quotes */}
       {insights.comparableQuotes && (
         <div>
-          <h4 className="font-semibold text-gray-800 mb-1">Local Comparisons</h4>
-          <p className="text-sm text-gray-600">{insights.comparableQuotes}</p>
+          <h4 className="text-xs uppercase tracking-widest text-warm-500 font-medium mb-2">Local Comparisons</h4>
+          <p className="text-sm text-warm-600 leading-relaxed font-light">{insights.comparableQuotes}</p>
         </div>
       )}
 
       {/* Negotiation Points */}
       {insights.negotiationPoints.length > 0 && (
         <div>
-          <h4 className="font-semibold text-gray-800 mb-2">Negotiation Talking Points</h4>
-          <ul className="space-y-1">
+          <h4 className="text-xs uppercase tracking-widest text-warm-500 font-medium mb-3">Negotiation Talking Points</h4>
+          <ul className="space-y-2">
             {insights.negotiationPoints.map((point, i) => (
-              <li key={i} className="text-sm text-gray-700 flex gap-2">
-                <span className="text-green-600 font-bold">→</span>
+              <li key={i} className="text-sm text-warm-700 flex gap-3 font-light">
+                <span className="text-gold-600 font-medium mt-0.5">&#8594;</span>
                 {point}
               </li>
             ))}
@@ -59,8 +59,8 @@ export default function PaidInsights({ insights }: Props) {
       {/* Detailed Explanation */}
       {insights.detailedExplanation && (
         <div>
-          <h4 className="font-semibold text-gray-800 mb-1">Detailed Analysis</h4>
-          <p className="text-sm text-gray-600 whitespace-pre-line">{insights.detailedExplanation}</p>
+          <h4 className="text-xs uppercase tracking-widest text-warm-500 font-medium mb-2">Detailed Analysis</h4>
+          <p className="text-sm text-warm-600 whitespace-pre-line leading-relaxed font-light">{insights.detailedExplanation}</p>
         </div>
       )}
     </div>

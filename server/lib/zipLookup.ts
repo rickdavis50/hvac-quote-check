@@ -1,44 +1,43 @@
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import type { ZipEntry } from '../types.js';
+import { stateFromZip3, cbsaFromZip3, climateFromState, centroidFromState } from '../../data/zip3-prefix.js';
+import { lookupCbsaCost } from '../../data/cbsa-cost-index.js';
+import type { CbsaCostEntry } from '../../data/cbsa-cost-index.js';
 
-let zipMap: Map<string, ZipEntry> | null = null;
-
-function loadZipData(): Map<string, ZipEntry> {
-  if (zipMap) return zipMap;
-  const raw = readFileSync(join(process.cwd(), 'data', 'zip-geography.json'), 'utf-8');
-  const entries: ZipEntry[] = JSON.parse(raw);
-  zipMap = new Map(entries.map((e) => [e.zip, e]));
-  return zipMap;
+export interface ZipResolution {
+  zip: string;
+  lat: number;
+  lon: number;
+  state: string;
+  metro: string | null;
+  climateRegion: string;
+  cbsaCode: string | null;
 }
 
-export function lookupZip(zip: string): ZipEntry | null {
-  const map = loadZipData();
-  return map.get(zip) ?? null;
+export function lookupZip(zip: string): ZipResolution | null {
+  if (!zip || zip.length < 3) return null;
+  const prefix = zip.slice(0, 3);
+  const state = stateFromZip3(prefix);
+  if (!state) return null;
+
+  const cbsaCode = cbsaFromZip3(prefix);
+  const cbsaEntry = cbsaCode ? lookupCbsaCost(cbsaCode) : null;
+
+  // Use RURAL-{state} if no metro CBSA found
+  const resolvedCbsa = cbsaCode ?? `RURAL-${state}`;
+  const resolvedEntry = cbsaEntry ?? lookupCbsaCost(`RURAL-${state}`);
+
+  const centroid = centroidFromState(state);
+
+  return {
+    zip,
+    lat: centroid.lat,
+    lon: centroid.lon,
+    state,
+    metro: cbsaEntry?.name ?? null,
+    climateRegion: climateFromState(state),
+    cbsaCode: resolvedCbsa,
+  };
 }
 
-export function findNearbyZips(lat: number, lon: number, radiusMiles: number): ZipEntry[] {
-  const map = loadZipData();
-  const results: ZipEntry[] = [];
-  for (const entry of map.values()) {
-    const dist = haversine(lat, lon, entry.lat, entry.lon);
-    if (dist <= radiusMiles) {
-      results.push(entry);
-    }
-  }
-  return results;
-}
-
-function haversine(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 3959; // Earth radius in miles
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-function toRad(deg: number): number {
-  return (deg * Math.PI) / 180;
+export function lookupCbsa(cbsaCode: string): CbsaCostEntry | null {
+  return lookupCbsaCost(cbsaCode);
 }

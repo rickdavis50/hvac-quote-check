@@ -12,6 +12,7 @@ export interface RawQuote {
   state: string;
   metro: string | null;
   climateRegion: string;
+  cbsaCode: string | null;
 
   // Quote details
   contractorName: string | null;
@@ -69,6 +70,32 @@ export interface ExtractedData {
   lineItems: LineItem[];
 }
 
+export interface PricingFactor {
+  label: string;
+  detail: string;
+  multiplier: number;
+  amount?: number;
+}
+
+export interface PricingResult {
+  methodologyVersion: string;
+  fairRange: { low: number; mid: number; high: number };
+  rating: 'Low' | 'Fair' | 'High';
+  savingsPotential: number;
+  confidence: 'high' | 'medium' | 'low';
+  factors: PricingFactor[];
+  marketContext: {
+    metroName: string | null;
+    compositeIndex: number;
+    comparableCount: number;
+  };
+  dataQuality: {
+    sampleSize: number;
+    geographyPrecision: 'zip' | 'metro' | 'state' | 'regional' | 'national';
+    dataRecency: 'recent' | 'moderate' | 'limited';
+  };
+}
+
 export interface AnalysisResult {
   submissionId: string;
   rating: 'Low' | 'Fair' | 'High';
@@ -84,6 +111,13 @@ export interface AnalysisResult {
     geographyPrecision: 'zip' | 'metro' | 'state' | 'regional' | 'national';
     dataRecency: 'recent' | 'moderate' | 'limited';
   };
+
+  pricing: {
+    methodologyVersion: string;
+    factors: PricingFactor[];
+    marketContext: PricingResult['marketContext'];
+  };
+  generatedAt: string;
 
   paidInsights: PaidInsights | null;
 }

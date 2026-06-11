@@ -58,6 +58,7 @@ export function normalize(merged: MergedExtraction): Omit<RawQuote, 'id' | 'time
     state: geo.state,
     metro: geo.metro,
     climateRegion: geo.climateRegion,
+    cbsaCode: geo.cbsaCode,
     contractorName: merged.contractorName,
     quotedTotal: merged.quotedTotal,
     jobType: merged.jobType as RawQuote['jobType'],
@@ -95,8 +96,9 @@ function inferSizeBand(tonnage: number | null): 'small' | 'medium' | 'large' {
   return 'medium';
 }
 
-function resolveGeography(zipCode: string): { lat: number; lon: number; state: string; metro: string | null; climateRegion: string } {
+function resolveGeography(zipCode: string): { lat: number; lon: number; state: string; metro: string | null; climateRegion: string; cbsaCode: string | null } {
   const entry = lookupZip(zipCode);
-  if (entry) return { lat: entry.lat, lon: entry.lon, state: entry.state, metro: entry.metro, climateRegion: entry.climateRegion };
-  return { lat: 39.8283, lon: -98.5795, state: 'US', metro: null, climateRegion: 'midwest' };
+  if (entry) return { lat: entry.lat, lon: entry.lon, state: entry.state, metro: entry.metro, climateRegion: entry.climateRegion, cbsaCode: entry.cbsaCode };
+  // Last resort: geographic center of US, no CBSA
+  return { lat: 39.8283, lon: -98.5795, state: 'US', metro: null, climateRegion: 'midwest', cbsaCode: null };
 }
