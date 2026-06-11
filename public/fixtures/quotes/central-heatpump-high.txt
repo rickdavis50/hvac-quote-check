@@ -1,0 +1,13 @@
+Evergreen Home Climate Proposal
+Project ZIP: 98109
+Replace existing central heat pump with new matched heat pump and air handler
+
+Scope of work:
+- Bryant central heat pump condenser and variable-speed air handler .... $13,800
+- New disconnect, pad, whip, and startup materials ..................... $1,400
+- Permit, commissioning, labor, and haul-away .......................... $4,200
+- Additional contractor markup and project management ................... $12,000
+
+System size: 3 ton
+SEER2: 16.0
+Project Total: $31,400

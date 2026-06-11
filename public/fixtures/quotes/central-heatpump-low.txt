@@ -1,0 +1,13 @@
+North Harbor Heating
+Customer ZIP: 98109
+Project: Replace existing central heat pump with matched air handler
+
+Equipment:
+- Goodman central heat pump condenser and air handler .......... $6,950
+- Disconnect, pad, and basic materials ........................ $550
+- Permit, startup, labor, and haul-away ....................... $2,200
+
+System size: 3 ton
+SEER2: 15.5
+Warranty: 10 year parts warranty
+Grand Total: $9,700

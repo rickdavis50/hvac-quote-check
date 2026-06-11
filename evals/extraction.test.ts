@@ -41,7 +41,7 @@ async function runExtractionEvals() {
     const heuristic = extractHeuristic(fixture.inputText);
 
     // Run LLM extraction (if API key available)
-    const llm = await extractWithLlm(fixture.inputText);
+    const llm = await extractWithLlm({ text: fixture.inputText, method: 'text', document: null });
 
     // Merge
     const merged = mergeExtractions(llm, heuristic);

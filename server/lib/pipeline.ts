@@ -1,68 +1,98 @@
 import type { AnalysisResult, QuoteSubmission, SystemType } from '../types.js';
-import { extractText } from './extraction.js';
+import { prepareInput, type ExtractionInput } from './extraction.js';
 import { extractHeuristic } from './heuristicExtraction.js';
 import { extractWithLlm } from './llmExtraction.js';
 import { mergeExtractions, normalize } from './normalization.js';
 import { validateForKnowledgeBase } from './validation.js';
 import { storeRawQuote } from './knowledgeBase.js';
-import { analyzeQuote } from './analyzer.js';
+import { priceWithMarket, composeResult } from './analyzer.js';
+import { saveSubmission, getSubmission } from './submissionStore.js';
 import { v4 as uuid } from 'uuid';
 
-const submissions = new Map<string, QuoteSubmission>();
+export { getSubmission, markPaid } from './submissionStore.js';
 
-export function getSubmission(id: string): QuoteSubmission | undefined {
-  return submissions.get(id);
+export type PipelineStage = 'reading' | 'extracting' | 'pricing' | 'writing';
+
+export class QuoteProcessingError extends Error {
+  status: number;
+  constructor(message: string, status = 422) {
+    super(message);
+    this.status = status;
+  }
 }
 
-export function markPaid(id: string): boolean {
-  const sub = submissions.get(id);
-  if (!sub) return false;
-  sub.paid = true;
-  return true;
+export interface AnalyzeRequest {
+  file?: { buffer: Buffer; mimeType: string; filename: string };
+  text?: string;
+  userZip?: string;
 }
 
 export async function processQuote(
-  buffer: Buffer,
-  mimeType: string,
-  originalFilename: string,
-  userZip?: string
+  request: AnalyzeRequest,
+  onStage?: (stage: PipelineStage) => void
 ): Promise<AnalysisResult> {
   const submissionId = uuid();
   const submission: QuoteSubmission = {
     id: submissionId,
-    status: 'received',
-    originalFilename,
-    mimeType,
+    status: 'processing',
+    originalFilename: request.file?.filename ?? 'pasted-text',
+    mimeType: request.file?.mimeType ?? 'text/plain',
     rawText: null,
     analysisResult: null,
     paid: false,
     createdAt: new Date().toISOString(),
   };
-  submissions.set(submissionId, submission);
 
-  submission.status = 'processing';
-  const { text } = await extractText(buffer, mimeType);
-  submission.rawText = text;
+  onStage?.('reading');
+  let input: ExtractionInput;
+  if (request.file) {
+    input = await prepareInput(request.file.buffer, request.file.mimeType);
+  } else if (request.text?.trim()) {
+    input = { text: request.text.trim(), method: 'text', document: null };
+  } else {
+    throw new QuoteProcessingError('Provide a quote file or pasted quote text.', 400);
+  }
+  submission.rawText = input.text;
 
+  if (!input.text && !process.env.ANTHROPIC_API_KEY) {
+    throw new QuoteProcessingError(
+      'This document has no readable text layer and AI extraction is not configured. Paste the quote text instead.'
+    );
+  }
+
+  onStage?.('extracting');
   const [heuristicResult, llmResult] = await Promise.all([
-    Promise.resolve(extractHeuristic(text)),
-    extractWithLlm(text),
+    Promise.resolve(extractHeuristic(input.text ?? '')),
+    extractWithLlm(input),
   ]);
 
   const merged = mergeExtractions(llmResult, heuristicResult);
-  if (userZip && (!merged.zipCode || merged.zipCode === '00000')) {
-    merged.zipCode = userZip;
+  if (request.userZip && (!merged.zipCode || merged.zipCode === '00000')) {
+    merged.zipCode = request.userZip;
+  }
+
+  if (!merged.quotedTotal || merged.quotedTotal <= 0) {
+    throw new QuoteProcessingError(
+      "We couldn't find a total price in this quote. Check that the document shows the full quoted amount, or paste the quote text including the total."
+    );
   }
 
   const normalized = normalize(merged);
   const validation = validateForKnowledgeBase(normalized);
-  if (validation.passed) {
+  // HVAC_DISABLE_KB_WRITES keeps eval/test runs from polluting the benchmark data
+  if (validation.passed && !process.env.HVAC_DISABLE_KB_WRITES) {
     storeRawQuote(normalized, 'user', 'extracted');
   }
 
-  const analysis = await analyzeQuote(normalized, submissionId);
+  onStage?.('pricing');
+  const { pricing, comparables } = priceWithMarket(normalized);
+
+  onStage?.('writing');
+  const analysis = await composeResult(normalized, pricing, comparables, submissionId);
+
   submission.status = 'processed';
   submission.analysisResult = analysis;
+  saveSubmission(submission);
   return analysis;
 }
 
@@ -70,9 +100,9 @@ export async function recomputeQuote(
   submissionId: string,
   corrections: Record<string, unknown>
 ): Promise<AnalysisResult> {
-  const submission = submissions.get(submissionId);
+  const submission = getSubmission(submissionId);
   if (!submission || !submission.analysisResult) {
-    throw new Error('Submission not found or not yet processed');
+    throw new QuoteProcessingError('Submission not found or not yet processed', 404);
   }
 
   const existing = submission.analysisResult.extractedData;
@@ -97,11 +127,13 @@ export async function recomputeQuote(
   });
 
   const validation = validateForKnowledgeBase(normalized);
-  if (validation.passed) {
+  if (validation.passed && !process.env.HVAC_DISABLE_KB_WRITES) {
     storeRawQuote(normalized, 'user', 'user_verified');
   }
 
-  const analysis = await analyzeQuote(normalized, submissionId);
+  const { pricing, comparables } = priceWithMarket(normalized);
+  const analysis = await composeResult(normalized, pricing, comparables, submissionId);
   submission.analysisResult = analysis;
+  saveSubmission(submission);
   return analysis;
 }

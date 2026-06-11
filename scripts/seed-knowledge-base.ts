@@ -3,8 +3,9 @@ import { mkdirSync } from 'fs';
 import { join } from 'path';
 import { storeRawQuote } from '../server/lib/knowledgeBase.js';
 import { recompileKnowledgeBase } from '../server/lib/recompiler.js';
-import { SYSTEM_BASELINES, CLIMATE_FACTORS, STATE_MULTIPLIERS, QUALITY_ADJUSTMENTS, SIZE_ADJUSTMENTS } from '../data/baselines.js';
+import { SYSTEM_BASELINES, QUALITY_ADJUSTMENTS, SIZE_ADJUSTMENTS } from '../data/baselines.js';
 import { lookupZip } from '../server/lib/zipLookup.js';
+import { lookupCbsaCost } from '../data/cbsa-cost-index.js';
 
 const SEED_ZIPS = [
   '10001', '90001', '60601', '77001', '85001',
@@ -41,12 +42,12 @@ async function main() {
       const sizeBand = randomElement(SIZE_BANDS);
 
       const baseline = SYSTEM_BASELINES[systemType];
-      const climateFactor = CLIMATE_FACTORS[geo.climateRegion] ?? 1.0;
-      const stateFactor = STATE_MULTIPLIERS[geo.state] ?? 1.0;
+      const cbsaEntry = geo.cbsaCode ? lookupCbsaCost(geo.cbsaCode) : null;
+      const compositeIndex = cbsaEntry?.compositeIndex ?? 1.0;
       const qualityFactor = QUALITY_ADJUSTMENTS[qualityTier];
       const sizeFactor = SIZE_ADJUSTMENTS[sizeBand];
 
-      const fairPrice = baseline * climateFactor * stateFactor * qualityFactor * sizeFactor;
+      const fairPrice = baseline * compositeIndex * qualityFactor * sizeFactor;
       const quotedTotal = randomVariation(fairPrice, 0.15);
 
       const ductworkIncluded = Math.random() > 0.6;
@@ -70,7 +71,7 @@ async function main() {
       storeRawQuote({
         extractionConfidence: 0.95,
         zipCode: zip, latitude: geo.lat, longitude: geo.lon,
-        state: geo.state, metro: geo.metro, climateRegion: geo.climateRegion,
+        state: geo.state, metro: geo.metro, climateRegion: geo.climateRegion, cbsaCode: geo.cbsaCode,
         contractorName: null, quotedTotal,
         jobType: 'replacement', systemType: systemType as any,
         equipmentBrand: null, seer2, tonnage, qualityTier, sizeBand,

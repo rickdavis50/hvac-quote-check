@@ -1,3 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-cream-100 text-warm-800 font-sans antialiased;
+  }
+
+  ::selection {
+    @apply bg-gold-400/30;
+  }
+}

@@ -2,22 +2,82 @@ import type { AnalysisResult, UserCorrections, PaidInsights } from '../types';
 
 const API_BASE = '/api';
 
-export async function uploadQuote(file: File, userZip?: string): Promise<AnalysisResult> {
-  const formData = new FormData();
-  formData.append('file', file);
-  if (userZip) formData.append('userZip', userZip);
+export interface AnalyzeInput {
+  file?: File;
+  text?: string;
+  zipCode?: string;
+}
 
-  const res = await fetch(`${API_BASE}/quotes/upload`, {
-    method: 'POST',
-    body: formData,
-  });
+export interface StageEvent {
+  stage: 'reading' | 'extracting' | 'pricing' | 'writing';
+  label: string;
+}
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: 'Upload failed' }));
-    throw new Error(err.error);
+function parseSseBlock(block: string): { event: string; data: string } | null {
+  let event = 'message';
+  const dataLines: string[] = [];
+  for (const line of block.split('\n')) {
+    if (line.startsWith('event:')) event = line.slice(6).trim();
+    else if (line.startsWith('data:')) dataLines.push(line.slice(5).trim());
+  }
+  if (dataLines.length === 0) return null;
+  return { event, data: dataLines.join('\n') };
+}
+
+// Streams real pipeline stages over SSE, resolving with the final analysis.
+export async function analyzeQuote(
+  input: AnalyzeInput,
+  onStage: (stage: StageEvent) => void
+): Promise<AnalysisResult> {
+  let body: BodyInit;
+  const headers: Record<string, string> = { Accept: 'text/event-stream' };
+
+  if (input.file) {
+    const formData = new FormData();
+    formData.append('file', input.file);
+    if (input.zipCode) formData.append('zipCode', input.zipCode);
+    body = formData;
+  } else {
+    headers['Content-Type'] = 'application/json';
+    body = JSON.stringify({ text: input.text, zipCode: input.zipCode || undefined });
   }
 
-  return res.json();
+  const res = await fetch(`${API_BASE}/quotes/analyze`, { method: 'POST', headers, body });
+
+  if (!res.ok || !res.body || !res.headers.get('content-type')?.includes('text/event-stream')) {
+    const err = await res.json().catch(() => ({ error: 'Analysis failed' }));
+    throw new Error(err.error ?? 'Analysis failed');
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let result: AnalysisResult | null = null;
+  let errorMessage: string | null = null;
+
+  const handleBlock = (raw: string) => {
+    const parsed = parseSseBlock(raw);
+    if (!parsed) return;
+    if (parsed.event === 'stage') onStage(JSON.parse(parsed.data));
+    else if (parsed.event === 'result') result = JSON.parse(parsed.data);
+    else if (parsed.event === 'error') errorMessage = JSON.parse(parsed.data).error;
+  };
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    let boundary;
+    while ((boundary = buffer.indexOf('\n\n')) !== -1) {
+      handleBlock(buffer.slice(0, boundary));
+      buffer = buffer.slice(boundary + 2);
+    }
+  }
+  if (buffer.trim()) handleBlock(buffer);
+
+  if (errorMessage) throw new Error(errorMessage);
+  if (!result) throw new Error('Analysis ended unexpectedly — please try again.');
+  return result;
 }
 
 export async function getQuote(id: string): Promise<AnalysisResult> {
@@ -42,9 +102,7 @@ export async function recomputeQuote(id: string, corrections: UserCorrections): 
 }
 
 export async function unlockInsights(id: string): Promise<{ checkoutUrl?: string; alreadyPaid?: boolean }> {
-  const res = await fetch(`${API_BASE}/quotes/${id}/unlock`, {
-    method: 'POST',
-  });
+  const res = await fetch(`${API_BASE}/quotes/${id}/unlock`, { method: 'POST' });
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: 'Unlock failed' }));
@@ -57,7 +115,7 @@ export async function unlockInsights(id: string): Promise<{ checkoutUrl?: string
 export async function getInsights(id: string): Promise<PaidInsights> {
   const res = await fetch(`${API_BASE}/quotes/${id}/insights`);
   if (!res.ok) {
-    if (res.status === 402) throw new Error('Payment required');
+    if (res.status === 402) throw new Error('Payment is still processing — refresh this page in a moment.');
     throw new Error('Insights not available');
   }
   return res.json();

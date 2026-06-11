@@ -3,3 +3,14 @@ node_modules
 .DS_Store
 client/dist
 server/dist
+dist
+server-dist
+*.tsbuildinfo
+
+# Runtime data
+data/submissions/
+.env.bak
+.superpowers/
+knowledge/
+.env.local
+.env.*.local

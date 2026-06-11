@@ -93,9 +93,8 @@ async function generateArticle(
 
   try {
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 2048,
-      temperature: 0,
+      model: 'claude-opus-4-8',
+      max_tokens: 16000,
       messages: [{
         role: 'user',
         content: `${instruction}\n\nData: ${summary}\n\nIndividual quotes:\n${quoteDetails}\n\nWrite a concise markdown article with frontmatter (lastCompiled, sampleSize, dataRange), a Summary section with key price ranges, a Detailed Breakdown section with patterns, and a Confidence Notes section. Focus on actionable pricing insights.`,

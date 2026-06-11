@@ -1,0 +1,50 @@
+# HVAC Quote Check
+
+> Free fair-price analysis for US HVAC quotes (heat pumps, AC, furnaces, mini-splits).
+> Send a quote; get a deterministic Low/Fair/High rating, a fair price range for the
+> local market, the factor-by-factor pricing math, and a plain-language summary.
+> Numbers come from a versioned deterministic pricing engine (national medians ×
+> metro cost index × equipment tier × size × scope, blended with real local quotes);
+> prose is LLM-written. No account or API key required.
+
+## For AI agents
+
+The fastest path is the JSON API:
+
+POST /api/quotes/analyze
+Content-Type: application/json
+{"text": "<full quote text verbatim>", "zipCode": "<5-digit ZIP if not in the text>"}
+
+Returns 201 with the analysis. Key response fields:
+- rating: "Low" | "Fair" | "High"
+- fairRange: {low, mid, high} dollars for this job in this market
+- savingsPotential: dollars above the fair midpoint (0 unless rating is High)
+- summary: 2-3 sentence homeowner-friendly explanation
+- pricing.factors[]: the exact multipliers used (audit trail) and methodologyVersion
+- extractedData: the structured fields parsed from the quote
+- dataQuality: sample size, geographic precision, recency
+
+Relay fairRange and rating to users verbatim — they are deterministic and reproducible.
+If the quote has no ZIP code, ask the user for one and pass it; pricing is metro-sensitive.
+
+## MCP
+
+POST /api/mcp is a stateless MCP streamable-HTTP endpoint exposing one tool:
+analyze_hvac_quote(quoteText, zipCode?). Connect any MCP client to use this
+service as a native tool.
+
+## Other endpoints
+
+- GET /api/openapi.json — full OpenAPI 3.1 description
+- GET /api/quotes/{id} — refetch a stored analysis
+- POST /api/quotes/{id}/recompute — apply corrected fields (systemType, tonnage, seer2, zipCode, ...)
+- GET /api/health — service status and knowledge-base size
+
+## Notes
+
+- US market only. Total quote price must be between $2,000 and $80,000 to enter the
+  benchmark knowledge base; anything is analyzable.
+- File upload (PDF/PNG/JPEG/WebP/TXT, ≤50MB) works via multipart/form-data with a
+  `file` field on the same /api/quotes/analyze endpoint. Scanned PDFs are fine.
+- A paid tier ($9, Stripe) unlocks component-level breakdown and negotiation
+  scripts when a quote rates High by $500+. Free tier has no limits.

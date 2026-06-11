@@ -100,8 +100,14 @@ function extractNumber(text: string, pattern: RegExp): number | null {
 }
 
 function extractZip(text: string): string | null {
-  const match = text.match(/\b(\d{5})(?:-\d{4})?\b/);
-  return match ? match[1] : null;
+  // Prefer a ZIP in address context — "City, ST 12345" or "ST 12345" — so we
+  // don't grab a model number or invoice number that happens to be 5 digits.
+  const stateZip = text.match(/\b[A-Z]{2}\s+(\d{5})(?:-\d{4})?\b/);
+  if (stateZip) return stateZip[1];
+  const labeled = text.match(/(?:zip|postal)\s*(?:code)?[:\s]+(\d{5})\b/i);
+  if (labeled) return labeled[1];
+  const any = text.match(/\b(\d{5})(?:-\d{4})?\b/);
+  return any ? any[1] : null;
 }
 
 function extractLineItems(text: string): Array<{ category: string; description: string; amount: number }> {
