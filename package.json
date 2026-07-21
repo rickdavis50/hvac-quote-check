@@ -24,7 +24,7 @@
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@react-three/drei": "^9.122.0",
     "@react-three/fiber": "^8.18.0",
-    "@upstash/redis": "^1.38.0",
+    "@supabase/supabase-js": "^2.110.8",
     "dotenv": "^16.4.0",
     "express": "^5.1.0",
     "express-rate-limit": "^8.5.2",

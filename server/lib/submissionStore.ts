@@ -1,33 +1,39 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
 import { join } from 'path';
-import { Redis } from '@upstash/redis';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { QuoteSubmission } from '../types.js';
 
 // Persistence for results, share links, and payment state.
-// Production (Vercel): a shared KV store (Upstash Redis) so submissions survive
-// across serverless invocations — a webhook that marks a submission paid on one
-// invocation must be visible to the insights fetch on another.
+// Production (Vercel): Supabase Postgres, so submissions survive across
+// serverless invocations — a webhook that marks a submission paid on one
+// invocation must be visible to the insights fetch on another. The service-role
+// key is used server-side only (RLS stays on; the browser never sees this store).
 // Local / Railway: one JSON file per submission on a persistent disk.
-// The store is selected automatically by the presence of KV credentials.
-const KV_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-const KV_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
-const redis = KV_URL && KV_TOKEN ? new Redis({ url: KV_URL, token: KV_TOKEN }) : null;
+// The store is selected automatically by the presence of Supabase credentials.
+const SB_URL = process.env.SUPABASE_URL;
+const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabase: SupabaseClient | null =
+  SB_URL && SB_KEY
+    ? createClient(SB_URL, SB_KEY, { auth: { persistSession: false, autoRefreshToken: false } })
+    : null;
 
-// 90 days: long enough for a shared result link and a paid report to stay live,
-// bounded enough that the KV store doesn't grow without limit.
-const TTL_SECONDS = 60 * 60 * 24 * 90;
+// Table name is overridable so the store can live in a shared project (namespaced,
+// e.g. hvac_submissions) or a dedicated one (submissions).
+const TABLE = process.env.HVAC_SUBMISSIONS_TABLE || 'submissions';
 
 const STORE_DIR = process.env.HVAC_SUBMISSIONS_DIR || join(process.cwd(), 'data', 'submissions');
-const keyFor = (id: string) => `submission:${id}`;
 const fileFor = (id: string) => join(STORE_DIR, `${id}.json`);
 
-// In-process cache only in disk mode (one long-lived process). In KV mode we
-// always read fresh so payment state set by the webhook invocation is visible.
-const cache = redis ? null : new Map<string, QuoteSubmission>();
+// In-process cache only in disk mode (one long-lived process). In Supabase mode
+// we always read fresh so payment state set by the webhook invocation is visible.
+const cache = supabase ? null : new Map<string, QuoteSubmission>();
 
 export async function saveSubmission(submission: QuoteSubmission): Promise<void> {
-  if (redis) {
-    await redis.set(keyFor(submission.id), submission, { ex: TTL_SECONDS });
+  if (supabase) {
+    const { error } = await supabase
+      .from(TABLE)
+      .upsert({ id: submission.id, data: submission }, { onConflict: 'id' });
+    if (error) throw new Error(`Failed to save submission: ${error.message}`);
     return;
   }
   cache!.set(submission.id, submission);
@@ -37,9 +43,10 @@ export async function saveSubmission(submission: QuoteSubmission): Promise<void>
 
 export async function getSubmission(id: string): Promise<QuoteSubmission | undefined> {
   if (!/^[a-zA-Z0-9-]+$/.test(id)) return undefined;
-  if (redis) {
-    const stored = await redis.get<QuoteSubmission>(keyFor(id));
-    return stored ?? undefined;
+  if (supabase) {
+    const { data, error } = await supabase.from(TABLE).select('data').eq('id', id).maybeSingle();
+    if (error || !data) return undefined;
+    return data.data as QuoteSubmission;
   }
   if (cache!.has(id)) return cache!.get(id);
   const path = fileFor(id);

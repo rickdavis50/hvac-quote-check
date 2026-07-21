@@ -110,7 +110,10 @@ Fixtures: `public/fixtures/quotes/` — central-heatpump trio calibrated to Seat
    "payment processing".
 5. Vite dev port 5173 (auto-assigned if busy; `PORT` env respected); Express reads
    `API_PORT` first.
-6. Runtime state (`knowledge/`, `data/submissions/`) is gitignored; in production point
-   `HVAC_SUBMISSIONS_DIR` / `HVAC_KNOWLEDGE_DIR` at a mounted volume.
+6. Runtime state (`knowledge/`, `data/submissions/`) is gitignored. Persistence auto-selects:
+   set `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (+ optional `HVAC_SUBMISSIONS_TABLE`,
+   default `submissions`) and the submission store uses Supabase Postgres (Vercel/serverless);
+   otherwise it uses `HVAC_SUBMISSIONS_DIR` on disk (Railway/local). `server/app.ts` is the
+   Express app; `api/index.js` re-exports it as the Vercel function (`vercel.json`).
 7. Three.js stack pinned to React 18 line: `@react-three/fiber@8`, `@react-three/drei@9`,
    `three@0.169`. The teardown lazy-loads (`React.lazy`) so tool surfaces stay fast.
