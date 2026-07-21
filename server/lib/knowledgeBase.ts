@@ -21,9 +21,17 @@ export function storeRawQuote(
   const day = String(now.getDate()).padStart(2, '0');
   const id = uuid();
   const quote: RawQuote = { ...quoteData, id, timestamp: now.toISOString(), source, trust };
-  const dir = join(RAW_DIR, year, month);
-  mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, `${day}-${id}.json`), JSON.stringify(quote, null, 2));
+  // KB accumulation is best-effort: on a serverless read-only filesystem the
+  // write throws, and that must never fail the user's analysis. Callers already
+  // gate on validation + HVAC_DISABLE_KB_WRITES; here we just never propagate an
+  // I/O error out of the request path.
+  try {
+    const dir = join(RAW_DIR, year, month);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, `${day}-${id}.json`), JSON.stringify(quote, null, 2));
+  } catch (err) {
+    console.warn('KB write skipped (read-only filesystem?):', err instanceof Error ? err.message : err);
+  }
   return quote;
 }
 

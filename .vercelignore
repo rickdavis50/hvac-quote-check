@@ -1,0 +1,12 @@
+# Vercel rebuilds these; keep the upload lean.
+node_modules
+dist
+knowledge
+data/submissions
+evals
+viz_previews
+.claude
+.env
+.env.*
+!.env.example
+DESIGN-BRIEF.md

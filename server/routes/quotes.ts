@@ -26,9 +26,9 @@ const STAGE_LABELS: Record<PipelineStage, string> = {
   writing: 'Writing your report',
 };
 
-function stripUnpaid(result: AnalysisResult): AnalysisResult {
+async function stripUnpaid(result: AnalysisResult): Promise<AnalysisResult> {
   if (!result.paidInsights) return result;
-  const submission = getSubmission(result.submissionId);
+  const submission = await getSubmission(result.submissionId);
   if (submission?.paid) return result;
   return { ...result, paidInsights: null };
 }
@@ -50,7 +50,7 @@ async function handleAnalyze(req: Request, res: Response): Promise<void> {
   if (!wantsStream) {
     try {
       const result = await processQuote(buildAnalyzeRequest(req));
-      res.status(201).json(stripUnpaid(result));
+      res.status(201).json(await stripUnpaid(result));
     } catch (err) {
       respondWithError(res, err);
     }
@@ -70,7 +70,7 @@ async function handleAnalyze(req: Request, res: Response): Promise<void> {
     const result = await processQuote(buildAnalyzeRequest(req), (stage) => {
       sendEvent('stage', { stage, label: STAGE_LABELS[stage] });
     });
-    sendEvent('result', stripUnpaid(result));
+    sendEvent('result', await stripUnpaid(result));
   } catch (err) {
     const { status, message } = describeError(err);
     sendEvent('error', { status, error: message });
@@ -102,19 +102,19 @@ router.post('/analyze', analyzeLimiter, upload.single('file'), handleAnalyze);
 // Back-compat alias for the original upload-only endpoint.
 router.post('/upload', analyzeLimiter, upload.single('file'), handleAnalyze);
 
-router.get('/:id', (req, res) => {
-  const submission = getSubmission(req.params.id);
+router.get('/:id', async (req, res) => {
+  const submission = await getSubmission(req.params.id);
   if (!submission || !submission.analysisResult) {
     res.status(404).json({ error: 'Quote not found or not yet processed' });
     return;
   }
-  res.json(stripUnpaid(submission.analysisResult));
+  res.json(await stripUnpaid(submission.analysisResult));
 });
 
 router.post('/:id/recompute', async (req, res) => {
   try {
     const result = await recomputeQuote(req.params.id, req.body);
-    res.json(stripUnpaid(result));
+    res.json(await stripUnpaid(result));
   } catch (err) {
     respondWithError(res, err);
   }

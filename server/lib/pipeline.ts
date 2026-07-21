@@ -92,7 +92,7 @@ export async function processQuote(
 
   submission.status = 'processed';
   submission.analysisResult = analysis;
-  saveSubmission(submission);
+  await saveSubmission(submission);
   return analysis;
 }
 
@@ -100,7 +100,7 @@ export async function recomputeQuote(
   submissionId: string,
   corrections: Record<string, unknown>
 ): Promise<AnalysisResult> {
-  const submission = getSubmission(submissionId);
+  const submission = await getSubmission(submissionId);
   if (!submission || !submission.analysisResult) {
     throw new QuoteProcessingError('Submission not found or not yet processed', 404);
   }
@@ -134,6 +134,6 @@ export async function recomputeQuote(
   const { pricing, comparables } = priceWithMarket(normalized);
   const analysis = await composeResult(normalized, pricing, comparables, submissionId);
   submission.analysisResult = analysis;
-  saveSubmission(submission);
+  await saveSubmission(submission);
   return analysis;
 }

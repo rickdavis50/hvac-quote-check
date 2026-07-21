@@ -1,4 +1,8 @@
-import pdfParse from 'pdf-parse';
+// Import the library entry directly, not the package index: pdf-parse's index.js
+// runs a debug file-read at import time when it thinks it's the main module,
+// which crashes under a bundler (Vercel/esbuild). The lib entry has no such side
+// effect. Types are re-declared for this subpath in pdf-parse-lib.d.ts.
+import pdfParse from 'pdf-parse/lib/pdf-parse.js';
 
 export interface ExtractionInput {
   /** Raw text when the source is text or a text-layer PDF. */
