@@ -4,6 +4,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { existsSync } from 'fs';
 import quotesRouter from './routes/quotes.js';
+import fairPriceRouter from './routes/fairPrice.js';
 import paymentsRouter from './routes/payments.js';
 import adminRouter from './routes/admin.js';
 import metaRouter from './routes/meta.js';
@@ -28,6 +29,7 @@ app.use('/api', paymentsRouter);
 app.use(express.json({ limit: '1mb' }));
 
 app.use('/api/quotes', quotesRouter);
+app.use('/api/fair-price', fairPriceRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/mcp', mcpLimiter, mcpRouter);
 app.use('/api', metaRouter);

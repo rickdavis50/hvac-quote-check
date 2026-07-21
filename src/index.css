@@ -4,10 +4,50 @@
 
 @layer base {
   body {
-    @apply bg-cream-100 text-warm-800 font-sans antialiased;
+    @apply bg-paper text-ink font-mono antialiased;
+    font-feature-settings: 'tnum' 1;
   }
 
   ::selection {
-    @apply bg-gold-400/30;
+    @apply bg-copper/25;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-1 ring-copper ring-offset-1 ring-offset-paper;
+  }
+}
+
+@layer components {
+  /* The patent-sheet frame: hairline border everything else respects. */
+  .sheet {
+    @apply relative border border-ink/20 bg-paper;
+  }
+
+  .sheet-titleblock {
+    @apply flex flex-wrap items-baseline gap-x-6 gap-y-1 border-b border-ink/20 px-5 py-2.5 text-[11px] uppercase tracking-micro text-ink-mute;
+  }
+
+  /* Receipt leader dots between a label and its amount. */
+  .leader {
+    @apply mx-2 flex-1 border-b border-dotted border-ink/30;
+    transform: translateY(-0.3em);
+  }
+
+  .btn-ink {
+    @apply inline-block border border-ink bg-ink px-5 py-2.5 text-[13px] font-medium tracking-wide text-paper transition-colors hover:bg-ink-soft;
+  }
+
+  .btn-line {
+    @apply inline-block border border-ink/40 px-5 py-2.5 text-[13px] font-medium tracking-wide text-ink transition-colors hover:border-ink hover:bg-ink/5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
