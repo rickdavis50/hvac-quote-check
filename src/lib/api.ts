@@ -1,6 +1,33 @@
-import type { AnalysisResult, UserCorrections, PaidInsights } from '../types';
+import type { AnalysisResult, UserCorrections, PaidInsights, FairPriceEstimate } from '../types';
 
 const API_BASE = '/api';
+
+export interface FairPriceParams {
+  zip: string;
+  systemType?: string;
+  tonnage?: number;
+  qualityTier?: string;
+  ductwork?: boolean;
+  electrical?: boolean;
+  permits?: boolean;
+}
+
+export async function getFairPrice(params: FairPriceParams): Promise<FairPriceEstimate> {
+  const q = new URLSearchParams({ zip: params.zip });
+  if (params.systemType) q.set('systemType', params.systemType);
+  if (params.tonnage !== undefined) q.set('tonnage', String(params.tonnage));
+  if (params.qualityTier) q.set('qualityTier', params.qualityTier);
+  if (params.ductwork !== undefined) q.set('ductwork', params.ductwork ? '1' : '0');
+  if (params.electrical !== undefined) q.set('electrical', params.electrical ? '1' : '0');
+  if (params.permits !== undefined) q.set('permits', params.permits ? '1' : '0');
+
+  const res = await fetch(`${API_BASE}/fair-price?${q.toString()}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Estimate failed' }));
+    throw new Error(err.error ?? 'Estimate failed');
+  }
+  return res.json();
+}
 
 export interface AnalyzeInput {
   file?: File;

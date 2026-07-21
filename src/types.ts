@@ -70,6 +70,34 @@ export interface AnalysisResult {
   paidInsights: PaidInsights | null;
 }
 
+export interface FairPriceEstimate {
+  methodologyVersion: string;
+  fairRange: { low: number; mid: number; high: number };
+  confidence: 'high' | 'medium' | 'low';
+  factors: PricingFactor[];
+  marketContext: {
+    metroName: string | null;
+    compositeIndex: number;
+    comparableCount: number;
+  };
+  dataQuality: {
+    sampleSize: number;
+    geographyPrecision: string;
+    dataRecency: string;
+  };
+  resolved: {
+    zipCode: string;
+    state: string;
+    metro: string | null;
+    systemType: string;
+    qualityTier: string;
+    sizeBand: string;
+    tonnage: number | null;
+    scope: string[];
+  };
+  generatedAt: string;
+}
+
 export interface UserCorrections {
   zipCode?: string;
   systemType?: string;

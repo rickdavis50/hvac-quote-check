@@ -16,11 +16,15 @@
     "eval:extraction": "tsx evals/extraction.test.ts",
     "eval:analysis": "tsx evals/analysis.test.ts",
     "eval:gates": "tsx evals/validation.test.ts",
+    "eval:fair-price": "tsx evals/fair-price.test.ts",
     "eval:e2e": "tsx evals/e2e.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.1",
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "@react-three/drei": "^9.122.0",
+    "@react-three/fiber": "^8.18.0",
+    "@supabase/supabase-js": "^2.110.8",
     "dotenv": "^16.4.0",
     "express": "^5.1.0",
     "express-rate-limit": "^8.5.2",
@@ -29,6 +33,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "stripe": "^17.0.0",
+    "three": "^0.169.0",
     "uuid": "^11.1.0",
     "zod": "^3.24.0"
   },
@@ -38,6 +43,7 @@
     "@types/pdf-parse": "^1.1.4",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
+    "@types/three": "^0.169.0",
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^4.3.0",
     "autoprefixer": "^10.4.0",

@@ -1,29 +1,41 @@
-import { useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import type { AnalysisResult, UserCorrections, PaidInsights as PaidInsightsType } from './types';
+import TopBar from './components/TopBar';
 import QuoteInput from './components/QuoteInput';
 import ProcessingSteps from './components/ProcessingSteps';
 import ResultsCard from './components/ResultsCard';
 import PaidInsights from './components/PaidInsights';
+import Landing from './pages/Landing';
 import { analyzeQuote, getQuote, recomputeQuote, unlockInsights, getInsights, type AnalyzeInput, type StageEvent } from './lib/api';
-import { readResultUrl, pushResultUrl, pushHomeUrl, resultShareLink } from './lib/urlState';
+import { parseRoute, pushRoute, pushResultUrl, resultShareLink, readFairPriceQuery, type Route } from './lib/urlState';
 
-type Screen = 'upload' | 'processing' | 'results';
+const TeardownPage = lazy(() => import('./pages/TeardownPage'));
+
+type CheckPhase = 'input' | 'processing';
 
 export default function App() {
-  const [screen, setScreen] = useState<Screen>('upload');
+  const [route, setRoute] = useState<Route>(() => parseRoute());
+  const [checkPhase, setCheckPhase] = useState<CheckPhase>('input');
   const [stage, setStage] = useState<StageEvent['stage'] | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [resultLoading, setResultLoading] = useState(false);
   const [paidInsightsData, setPaidInsightsData] = useState<PaidInsightsType | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [correcting, setCorrecting] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
 
+  const navigate = useCallback((path: string) => {
+    setError(null);
+    pushRoute(path);
+    setRoute(parseRoute());
+  }, []);
+
   const loadStored = useCallback(async (id: string, paidReturn: boolean) => {
+    setResultLoading(true);
     try {
       const stored = await getQuote(id);
       setResult(stored);
       setPaidInsightsData(stored.paidInsights);
-      setScreen('results');
       if (paidReturn && !stored.paidInsights) {
         try {
           setPaidInsightsData(await getInsights(id));
@@ -33,44 +45,41 @@ export default function App() {
       }
     } catch {
       setError('That result link has expired or does not exist.');
-      setScreen('upload');
-      pushHomeUrl();
+      pushRoute('/');
+      setRoute({ page: 'home' });
+    } finally {
+      setResultLoading(false);
     }
   }, []);
 
-  // Result permalinks: load on first visit, handle back/forward.
+  // Load stored results on deep links; handle back/forward.
   useEffect(() => {
-    const { id, paidReturn } = readResultUrl();
-    if (id) void loadStored(id, paidReturn);
+    if (route.page === 'result' && (!result || result.submissionId !== route.id)) {
+      void loadStored(route.id, route.paidReturn);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [route]);
 
-    const onPopState = () => {
-      const { id: poppedId } = readResultUrl();
-      if (poppedId) {
-        void loadStored(poppedId, false);
-      } else {
-        setScreen('upload');
-        setResult(null);
-        setPaidInsightsData(null);
-      }
-    };
+  useEffect(() => {
+    const onPopState = () => setRoute(parseRoute());
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
-  }, [loadStored]);
+  }, []);
 
   const handleSubmit = useCallback(async (input: AnalyzeInput) => {
     setError(null);
-    setScreen('processing');
+    setCheckPhase('processing');
     setStage(null);
-
     try {
       const analysis = await analyzeQuote(input, (event) => setStage(event.stage));
       setResult(analysis);
       setPaidInsightsData(analysis.paidInsights);
-      setScreen('results');
+      setCheckPhase('input');
       pushResultUrl(analysis.submissionId);
+      setRoute(parseRoute());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Analysis failed');
-      setScreen('upload');
+      setCheckPhase('input');
     }
   }, []);
 
@@ -102,15 +111,6 @@ export default function App() {
     }
   }, [result]);
 
-  const handleReset = useCallback(() => {
-    setScreen('upload');
-    setResult(null);
-    setPaidInsightsData(null);
-    setError(null);
-    setStage(null);
-    pushHomeUrl();
-  }, []);
-
   const handleCopyLink = useCallback(async () => {
     if (!result) return;
     await navigator.clipboard.writeText(resultShareLink(result.submissionId));
@@ -118,79 +118,114 @@ export default function App() {
     setTimeout(() => setLinkCopied(false), 2000);
   }, [result]);
 
-  return (
-    <div className="min-h-screen flex flex-col">
-      <div className="max-w-2xl w-full mx-auto px-6 py-16 flex-1">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="font-serif text-5xl text-warm-900 tracking-tight">
-            HVAC Quote Check
-          </h1>
-          <p className="text-warm-500 mt-3 text-lg font-light tracking-wide">
-            Upload your quote. Get the truth.
-          </p>
-        </div>
+  // The teardown chamber owns its whole viewport, chrome included.
+  if (route.page === 'teardown') {
+    return (
+      <Suspense
+        fallback={
+          <div className="flex min-h-screen items-center justify-center bg-chamber text-paper/60 text-[13px]">
+            Preparing the teardown…
+          </div>
+        }
+      >
+        <TeardownPage onNavigate={navigate} />
+      </Suspense>
+    );
+  }
 
-        {/* Error */}
-        {error && (
-          <div className="mb-8 p-4 bg-rating-high/10 border border-rating-high/20 rounded-lg text-rating-high text-sm">
+  return (
+    <div className="flex min-h-screen flex-col">
+      <TopBar onNavigate={navigate} />
+
+      {error && (
+        <div className="mx-auto mt-4 w-full max-w-6xl px-5 sm:px-8">
+          <div className="border border-verdict-high/40 bg-verdict-high/5 px-4 py-3 text-[13px] text-verdict-high">
             {error}
-            <button onClick={() => setError(null)} className="ml-2 font-medium underline hover:no-underline">
+            <button onClick={() => setError(null)} className="ml-3 underline hover:no-underline">
               Dismiss
             </button>
           </div>
+        </div>
+      )}
+
+      <main className="flex-1">
+        {route.page === 'home' && (
+          <Landing initialQuery={readFairPriceQuery()} onNavigate={navigate} />
         )}
 
-        {/* Screens */}
-        {screen === 'upload' && (
-          <QuoteInput onSubmit={handleSubmit} disabled={false} />
-        )}
+        {route.page === 'check' && (
+          <div className="mx-auto w-full max-w-3xl px-5 pb-24 sm:px-8">
+            <section className="pb-8 pt-14">
+              <h1 className="font-display text-4xl leading-tight tracking-tight text-ink sm:text-5xl">
+                Put the quote under the x-ray.
+              </h1>
+              <p className="mt-4 max-w-[52ch] text-[14px] leading-relaxed text-ink-soft">
+                PDF, photo, or pasted text. The engine reads it, prices the same job in your
+                market, and rates it Low, Fair, or High, with every factor shown.
+              </p>
+            </section>
 
-        {screen === 'processing' && (
-          <div className="bg-cream-50 rounded-2xl border border-cream-300 p-10">
-            <h2 className="font-serif text-2xl text-warm-900">Analyzing your quote…</h2>
-            <ProcessingSteps currentStage={stage} />
-          </div>
-        )}
+            {checkPhase === 'input' && <QuoteInput onSubmit={handleSubmit} />}
 
-        {screen === 'results' && result && (
-          <div className="space-y-8">
-            <div className="bg-cream-50 rounded-2xl border border-cream-300 p-8">
-              <ResultsCard
-                result={result}
-                onCorrections={handleCorrections}
-                onUnlock={handleUnlock}
-                correcting={correcting}
-              />
-            </div>
-
-            {paidInsightsData && (
-              <PaidInsights insights={paidInsightsData} />
+            {checkPhase === 'processing' && (
+              <div className="sheet px-6 py-8 sm:px-8">
+                <h2 className="font-display text-2xl text-ink">Dissecting your quote…</h2>
+                <ProcessingSteps currentStage={stage} />
+              </div>
             )}
-
-            <div className="flex items-center justify-center gap-8 text-sm">
-              <button
-                onClick={handleCopyLink}
-                className="text-warm-500 hover:text-warm-800 font-medium transition-colors"
-              >
-                {linkCopied ? 'Link copied' : 'Copy result link'}
-              </button>
-              <button
-                onClick={handleReset}
-                className="text-warm-500 hover:text-warm-800 font-medium transition-colors"
-              >
-                Analyze another quote
-              </button>
-            </div>
           </div>
         )}
-      </div>
 
-      <footer className="text-center pb-8 text-xs text-warm-500/70 font-light">
-        Free fair-price analysis for US HVAC quotes · AI agents welcome —{' '}
-        <a href="/llms.txt" className="underline hover:text-warm-700 transition-colors">llms.txt</a>
-        {' '}·{' '}
-        <a href="/api/openapi.json" className="underline hover:text-warm-700 transition-colors">API</a>
+        {route.page === 'result' && (
+          <div className="mx-auto w-full max-w-4xl px-5 pb-24 sm:px-8">
+            {resultLoading && (
+              <p className="pt-20 text-center text-[13px] text-ink-mute">Retrieving the sheet…</p>
+            )}
+            {!resultLoading && result && (
+              <div className="space-y-8 pt-10">
+                <ResultsCard
+                  result={result}
+                  onCorrections={handleCorrections}
+                  onUnlock={handleUnlock}
+                  correcting={correcting}
+                />
+
+                {paidInsightsData && <PaidInsights insights={paidInsightsData} />}
+
+                <div className="flex items-center justify-center gap-8 text-[13px]">
+                  <button onClick={handleCopyLink} className="text-ink-mute transition-colors hover:text-ink">
+                    {linkCopied ? 'Link copied' : 'Copy result link'}
+                  </button>
+                  <button
+                    onClick={() => navigate('/check')}
+                    className="text-ink-mute transition-colors hover:text-ink"
+                  >
+                    Check another quote
+                  </button>
+                  <button
+                    onClick={() => navigate('/')}
+                    className="text-ink-mute transition-colors hover:text-ink"
+                  >
+                    Fair price lookup
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </main>
+
+      <footer className="border-t border-ink/15 px-5 py-6 text-[11px] text-ink-mute sm:px-8">
+        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-baseline gap-x-6 gap-y-2">
+          <span className="font-display text-sm italic text-ink">Fair Air</span>
+          <span>Deterministic fair pricing for US heat pumps and HVAC</span>
+          <span className="ml-auto">
+            AI agents welcome —{' '}
+            <a href="/llms.txt" className="underline hover:text-ink">llms.txt</a> ·{' '}
+            <a href="/api/openapi.json" className="underline hover:text-ink">OpenAPI</a> ·{' '}
+            <a href="/api/mcp" className="underline hover:text-ink">MCP</a>
+          </span>
+        </div>
       </footer>
     </div>
   );

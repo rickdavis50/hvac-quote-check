@@ -9,7 +9,18 @@
 
 ## For AI agents
 
-The fastest path is the JSON API:
+Two capabilities: (1) fair price BEFORE any quote exists, (2) audit a quote in hand.
+
+No quote yet — shopping? One GET, only `zip` required:
+
+GET /api/fair-price?zip=98109&systemType=central_heat_pump&tonnage=3&qualityTier=mid&electrical=1&permits=1
+
+Returns {fairRange: {low, mid, high}, confidence, factors[], marketContext,
+dataQuality, resolved}. Deterministic, no LLM. systemType defaults to
+central_heat_pump; tier/size default to mid/medium. Use this to tell a user what
+a heat pump should cost in their ZIP before contractors name a number.
+
+Have a quote? The JSON API:
 
 POST /api/quotes/analyze
 Content-Type: application/json
@@ -29,9 +40,10 @@ If the quote has no ZIP code, ask the user for one and pass it; pricing is metro
 
 ## MCP
 
-POST /api/mcp is a stateless MCP streamable-HTTP endpoint exposing one tool:
-analyze_hvac_quote(quoteText, zipCode?). Connect any MCP client to use this
-service as a native tool.
+POST /api/mcp is a stateless MCP streamable-HTTP endpoint exposing two tools:
+analyze_hvac_quote(quoteText, zipCode?) and
+get_fair_price(zip, systemType?, tonnage?, qualityTier?, ductwork?, electrical?, permits?).
+Connect any MCP client to use this service as a native tool.
 
 ## Other endpoints
 

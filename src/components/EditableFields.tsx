@@ -48,96 +48,143 @@ export default function EditableFields({ data, onSave, saving }: Props) {
 
   if (!editing) {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="font-serif text-lg text-warm-900">Extracted Details</h3>
-          <button onClick={() => setEditing(true)} className="text-sm text-gold-600 hover:text-gold-500 font-medium tracking-wide transition-colors">
-            Edit
+      <div>
+        <div className="flex items-baseline justify-between">
+          <h3 className="font-display text-xl text-ink">What the engine read</h3>
+          <button
+            onClick={() => setEditing(true)}
+            className="text-[12px] font-medium text-copper-deep transition-colors hover:text-copper"
+          >
+            Correct it
           </button>
         </div>
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <div><span className="text-warm-500 font-light">ZIP:</span> <span className="text-warm-800">{data.zipCode}</span></div>
-          <div><span className="text-warm-500 font-light">System:</span> <span className="text-warm-800">{titleCase(data.systemType)}</span></div>
-          <div><span className="text-warm-500 font-light">Brand:</span> <span className="text-warm-800">{data.equipmentBrand ?? 'Unknown'}</span></div>
-          <div><span className="text-warm-500 font-light">Quality:</span> <span className="text-warm-800">{titleCase(data.qualityTier)}</span></div>
-          <div><span className="text-warm-500 font-light">Tonnage:</span> <span className="text-warm-800">{data.tonnage ?? 'Unknown'}</span></div>
-          <div><span className="text-warm-500 font-light">SEER2:</span> <span className="text-warm-800">{data.seer2 ?? 'Unknown'}</span></div>
-          <div><span className="text-warm-500 font-light">Permits:</span> <span className="text-warm-800">{data.permitsIncluded ? 'Yes' : 'No'}</span></div>
-          <div><span className="text-warm-500 font-light">Ductwork:</span> <span className="text-warm-800">{data.ductworkIncluded ? 'Yes' : 'No'}</span></div>
-          <div><span className="text-warm-500 font-light">Electrical:</span> <span className="text-warm-800">{data.electricalIncluded ? 'Yes' : 'No'}</span></div>
-          {data.contractorName && <div className="col-span-2"><span className="text-warm-500 font-light">Contractor:</span> <span className="text-warm-800">{data.contractorName}</span></div>}
-        </div>
+        <dl className="mt-4 grid grid-cols-2 gap-x-8 gap-y-2 text-[13px] sm:grid-cols-3">
+          {(
+            [
+              ['ZIP', data.zipCode],
+              ['System', titleCase(data.systemType)],
+              ['Brand', data.equipmentBrand ?? 'Unknown'],
+              ['Tier', titleCase(data.qualityTier)],
+              ['Tonnage', data.tonnage ?? 'Unknown'],
+              ['SEER2', data.seer2 ?? 'Unknown'],
+              ['Permits', data.permitsIncluded ? 'Yes' : 'No'],
+              ['Ductwork', data.ductworkIncluded ? 'Yes' : 'No'],
+              ['Electrical', data.electricalIncluded ? 'Yes' : 'No'],
+            ] as const
+          ).map(([label, value]) => (
+            <div key={label} className="flex items-baseline border-b border-ink/10 py-1">
+              <dt className="text-ink-mute">{label}</dt>
+              <span className="leader" />
+              <dd className="text-ink">{value}</dd>
+            </div>
+          ))}
+          {data.contractorName && (
+            <div className="col-span-2 flex items-baseline border-b border-ink/10 py-1 sm:col-span-3">
+              <dt className="text-ink-mute">Contractor</dt>
+              <span className="leader" />
+              <dd className="text-ink">{data.contractorName}</dd>
+            </div>
+          )}
+        </dl>
       </div>
     );
   }
 
-  const inputClass = "block w-full border border-cream-300 rounded-lg px-3 py-2 bg-cream-50 text-warm-800 text-sm focus:outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500/30 transition-colors";
+  const inputClass =
+    'block w-full border border-ink/30 bg-paper px-3 py-2 text-[13px] text-ink focus:border-copper';
 
   return (
-    <div className="space-y-4">
-      <h3 className="font-serif text-lg text-warm-900">Correct Details</h3>
-      <div className="grid grid-cols-2 gap-4 text-sm">
+    <div>
+      <h3 className="font-display text-xl text-ink">Correct the record</h3>
+      <div className="mt-4 grid grid-cols-2 gap-4 text-[13px]">
         <label className="space-y-1.5">
-          <span className="text-warm-500 font-light text-xs uppercase tracking-wider">ZIP Code</span>
-          <input type="text" value={fields.zipCode} onChange={(e) => setFields({ ...fields, zipCode: e.target.value })}
-            className={inputClass} maxLength={5} />
+          <span className="block text-[11px] uppercase tracking-micro text-ink-mute">ZIP code</span>
+          <input
+            type="text"
+            value={fields.zipCode}
+            onChange={(e) => setFields({ ...fields, zipCode: e.target.value })}
+            className={inputClass}
+            maxLength={5}
+          />
         </label>
         <label className="space-y-1.5">
-          <span className="text-warm-500 font-light text-xs uppercase tracking-wider">System Type</span>
-          <select value={fields.systemType} onChange={(e) => setFields({ ...fields, systemType: e.target.value })}
-            className={inputClass}>
-            {SYSTEM_TYPES.map((t) => <option key={t} value={t}>{titleCase(t)}</option>)}
+          <span className="block text-[11px] uppercase tracking-micro text-ink-mute">System type</span>
+          <select
+            value={fields.systemType}
+            onChange={(e) => setFields({ ...fields, systemType: e.target.value })}
+            className={inputClass}
+          >
+            {SYSTEM_TYPES.map((t) => (
+              <option key={t} value={t}>{titleCase(t)}</option>
+            ))}
           </select>
         </label>
         <label className="space-y-1.5">
-          <span className="text-warm-500 font-light text-xs uppercase tracking-wider">Tonnage</span>
-          <select value={fields.tonnage} onChange={(e) => setFields({ ...fields, tonnage: e.target.value ? Number(e.target.value) : '' })}
-            className={inputClass}>
+          <span className="block text-[11px] uppercase tracking-micro text-ink-mute">Tonnage</span>
+          <select
+            value={fields.tonnage}
+            onChange={(e) => setFields({ ...fields, tonnage: e.target.value ? Number(e.target.value) : '' })}
+            className={inputClass}
+          >
             <option value="">Unknown</option>
-            {TONNAGE_OPTIONS.map((t) => <option key={t} value={t}>{t} Ton</option>)}
+            {TONNAGE_OPTIONS.map((t) => (
+              <option key={t} value={t}>{t} ton</option>
+            ))}
           </select>
         </label>
         <label className="space-y-1.5">
-          <span className="text-warm-500 font-light text-xs uppercase tracking-wider">SEER2</span>
-          <select value={fields.seer2} onChange={(e) => setFields({ ...fields, seer2: e.target.value ? Number(e.target.value) : '' })}
-            className={inputClass}>
+          <span className="block text-[11px] uppercase tracking-micro text-ink-mute">SEER2</span>
+          <select
+            value={fields.seer2}
+            onChange={(e) => setFields({ ...fields, seer2: e.target.value ? Number(e.target.value) : '' })}
+            className={inputClass}
+          >
             <option value="">Unknown</option>
-            {SEER2_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+            {SEER2_OPTIONS.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
           </select>
         </label>
         <label className="space-y-1.5">
-          <span className="text-warm-500 font-light text-xs uppercase tracking-wider">Quality Tier</span>
-          <select value={fields.qualityTier} onChange={(e) => setFields({ ...fields, qualityTier: e.target.value })}
-            className={inputClass}>
+          <span className="block text-[11px] uppercase tracking-micro text-ink-mute">Equipment tier</span>
+          <select
+            value={fields.qualityTier}
+            onChange={(e) => setFields({ ...fields, qualityTier: e.target.value })}
+            className={inputClass}
+          >
             <option value="budget">Budget</option>
             <option value="mid">Mid</option>
             <option value="premium">Premium</option>
           </select>
         </label>
-        <div className="space-y-3 pt-5">
-          <label className="flex items-center gap-2.5 cursor-pointer">
-            <input type="checkbox" checked={fields.permitsIncluded} onChange={(e) => setFields({ ...fields, permitsIncluded: e.target.checked })}
-              className="rounded border-cream-400 text-gold-600 focus:ring-gold-500/30" />
-            <span className="text-warm-600 text-sm">Permits included</span>
-          </label>
-          <label className="flex items-center gap-2.5 cursor-pointer">
-            <input type="checkbox" checked={fields.ductworkIncluded} onChange={(e) => setFields({ ...fields, ductworkIncluded: e.target.checked })}
-              className="rounded border-cream-400 text-gold-600 focus:ring-gold-500/30" />
-            <span className="text-warm-600 text-sm">Ductwork included</span>
-          </label>
-          <label className="flex items-center gap-2.5 cursor-pointer">
-            <input type="checkbox" checked={fields.electricalIncluded} onChange={(e) => setFields({ ...fields, electricalIncluded: e.target.checked })}
-              className="rounded border-cream-400 text-gold-600 focus:ring-gold-500/30" />
-            <span className="text-warm-600 text-sm">Electrical included</span>
-          </label>
+        <div className="space-y-2.5 pt-5">
+          {(
+            [
+              ['Permits included', 'permitsIncluded'],
+              ['Ductwork included', 'ductworkIncluded'],
+              ['Electrical included', 'electricalIncluded'],
+            ] as const
+          ).map(([label, key]) => (
+            <label key={key} className="flex cursor-pointer items-center gap-2.5">
+              <input
+                type="checkbox"
+                checked={fields[key]}
+                onChange={(e) => setFields({ ...fields, [key]: e.target.checked })}
+                className="h-3.5 w-3.5 accent-copper"
+              />
+              <span className="text-ink-soft">{label}</span>
+            </label>
+          ))}
         </div>
       </div>
-      <div className="flex gap-3 pt-2">
-        <button onClick={handleSave} disabled={saving}
-          className="px-6 py-2.5 bg-warm-700 text-cream-50 rounded-lg text-sm font-medium hover:bg-warm-800 disabled:opacity-50 transition-colors tracking-wide">
-          {saving ? 'Re-analyzing...' : 'Save & Re-analyze'}
+      <div className="mt-5 flex gap-3">
+        <button onClick={handleSave} disabled={saving} className="btn-ink disabled:opacity-40">
+          {saving ? 'Re-pricing…' : 'Save and re-price'}
         </button>
-        <button onClick={() => setEditing(false)} className="px-4 py-2.5 text-warm-500 hover:text-warm-700 text-sm transition-colors">
+        <button
+          onClick={() => setEditing(false)}
+          className="px-4 py-2.5 text-[13px] text-ink-mute transition-colors hover:text-ink"
+        >
           Cancel
         </button>
       </div>

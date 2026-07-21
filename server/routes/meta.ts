@@ -52,7 +52,7 @@ const openapi = {
     description:
       'Upload or paste an HVAC quote; get a deterministic fair-price assessment for the local US market. ' +
       'Built for humans and AI agents. AI agents can also use the MCP endpoint at POST /api/mcp ' +
-      '(streamable HTTP, tool: analyze_hvac_quote) or read /llms.txt.',
+      '(streamable HTTP, tools: analyze_hvac_quote, get_fair_price) or read /llms.txt.',
   },
   paths: {
     '/api/quotes/analyze': {
@@ -90,6 +90,35 @@ const openapi = {
           '201': { description: 'Analysis result', content: { 'application/json': { schema: analysisResultSchema } } },
           '400': { description: 'Bad input (no file/text, unsupported type)' },
           '422': { description: 'Quote unreadable or missing a total price' },
+        },
+      },
+    },
+    '/api/fair-price': {
+      get: {
+        summary: 'Fair installed-price range with NO quote — shop before contractors name a number',
+        description:
+          'Deterministic fair low/mid/high for a system type in a ZIP code, with the factor-by-factor math. ' +
+          'No LLM, no quote text. Only `zip` is required; everything else defaults sensibly ' +
+          '(central_heat_pump, mid tier, medium size, equipment+labor scope).',
+        parameters: [
+          { name: 'zip', in: 'query', required: true, schema: { type: 'string' }, description: '5-digit US ZIP' },
+          {
+            name: 'systemType',
+            in: 'query',
+            schema: {
+              type: 'string',
+              enum: ['central_heat_pump', 'heat_pump_split', 'mini_split', 'furnace_ac_split', 'ac_only', 'furnace_only', 'package_unit', 'other'],
+            },
+          },
+          { name: 'tonnage', in: 'query', schema: { type: 'number', minimum: 1, maximum: 6 } },
+          { name: 'qualityTier', in: 'query', schema: { type: 'string', enum: ['budget', 'mid', 'premium'] } },
+          { name: 'ductwork', in: 'query', schema: { type: 'boolean' } },
+          { name: 'electrical', in: 'query', schema: { type: 'boolean' } },
+          { name: 'permits', in: 'query', schema: { type: 'boolean' } },
+        ],
+        responses: {
+          '200': { description: 'Fair range, factor trace, market context, resolved inputs' },
+          '400': { description: 'Invalid zip / systemType / tier / tonnage' },
         },
       },
     },

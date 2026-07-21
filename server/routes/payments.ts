@@ -6,7 +6,7 @@ const router = Router();
 
 router.post('/quotes/:id/unlock', async (req, res) => {
   if (!isStripeConfigured()) { res.status(503).json({ error: 'Payments not configured' }); return; }
-  const submission = getSubmission(req.params.id);
+  const submission = await getSubmission(req.params.id);
   if (!submission || !submission.analysisResult) { res.status(404).json({ error: 'Quote not found' }); return; }
   if (submission.analysisResult.rating !== 'High' || submission.analysisResult.savingsPotential < 500) {
     res.status(400).json({ error: 'No paid insights available for this quote' }); return;
@@ -21,15 +21,15 @@ router.post('/quotes/:id/unlock', async (req, res) => {
   }
 });
 
-router.get('/quotes/:id/insights', (req, res) => {
-  const submission = getSubmission(req.params.id);
+router.get('/quotes/:id/insights', async (req, res) => {
+  const submission = await getSubmission(req.params.id);
   if (!submission || !submission.analysisResult) { res.status(404).json({ error: 'Quote not found' }); return; }
   if (!submission.analysisResult.paidInsights) { res.status(404).json({ error: 'No paid insights for this quote' }); return; }
   if (!submission.paid) { res.status(402).json({ error: 'Payment required' }); return; }
   res.json(submission.analysisResult.paidInsights);
 });
 
-router.post('/webhooks/stripe', raw({ type: 'application/json' }), (req, res) => {
+router.post('/webhooks/stripe', raw({ type: 'application/json' }), async (req, res) => {
   const sig = req.headers['stripe-signature'] as string;
   if (!sig) { res.status(400).json({ error: 'Missing stripe-signature header' }); return; }
   try {
@@ -37,7 +37,7 @@ router.post('/webhooks/stripe', raw({ type: 'application/json' }), (req, res) =>
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as { metadata?: { submissionId?: string } };
       const submissionId = session.metadata?.submissionId;
-      if (submissionId) { markPaid(submissionId); console.log(`Payment confirmed for submission ${submissionId}`); }
+      if (submissionId) { await markPaid(submissionId); console.log(`Payment confirmed for submission ${submissionId}`); }
     }
     res.json({ received: true });
   } catch (err) {
