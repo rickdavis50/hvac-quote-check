@@ -7,6 +7,7 @@ import ResultsCard from './components/ResultsCard';
 import PaidInsights from './components/PaidInsights';
 import Landing from './pages/Landing';
 import LegalPage from './pages/LegalPage';
+import PrivacyPage from './pages/PrivacyPage';
 import { analyzeQuote, getQuote, recomputeQuote, unlockInsights, getInsights, type AnalyzeInput, type StageEvent } from './lib/api';
 import { parseRoute, pushRoute, pushResultUrl, resultShareLink, readFairPriceQuery, type Route } from './lib/urlState';
 
@@ -156,6 +157,8 @@ export default function App() {
 
         {route.page === 'legal' && <LegalPage onNavigate={navigate} />}
 
+        {route.page === 'privacy' && <PrivacyPage onNavigate={navigate} />}
+
         {route.page === 'check' && (
           <div className="mx-auto w-full max-w-3xl px-5 pb-24 sm:px-8">
             <section className="pb-8 pt-14">
@@ -168,7 +171,18 @@ export default function App() {
               </p>
             </section>
 
-            {checkPhase === 'input' && <QuoteInput onSubmit={handleSubmit} />}
+            {checkPhase === 'input' && (
+              <>
+                <QuoteInput onSubmit={handleSubmit} />
+                <p className="mt-4 text-[11px] leading-snug text-ink-mute">
+                  Your quote may contain personal details. We use it only to produce your analysis,
+                  store it securely, auto-delete it after 90 days, and never sell it.{' '}
+                  <button onClick={() => navigate('/privacy')} className="underline hover:text-ink">
+                    How we handle your data
+                  </button>
+                </p>
+              </>
+            )}
 
             {checkPhase === 'processing' && (
               <div className="sheet px-6 py-8 sm:px-8">
@@ -224,6 +238,9 @@ export default function App() {
           <span>Deterministic fair pricing for US heat pumps and HVAC</span>
           <button onClick={() => navigate('/legal')} className="underline transition-colors hover:text-ink">
             Terms &amp; disclaimer
+          </button>
+          <button onClick={() => navigate('/privacy')} className="underline transition-colors hover:text-ink">
+            Privacy
           </button>
           <span className="ml-auto">
             AI agents welcome —{' '}
