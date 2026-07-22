@@ -144,6 +144,13 @@ export default function FairPriceTool({ initial, onNavigate }: Props) {
                 midpoint {formatMoney(estimate.fairRange.mid)} · confidence {estimate.confidence} ·{' '}
                 {estimate.dataQuality.geographyPrecision}-level data
               </p>
+              <p className="mt-2 max-w-[52ch] text-[11px] leading-snug text-ink-mute">
+                An estimate, not financial advice or a quote. Actual prices vary by home and
+                contractor — verify with a licensed pro before you buy.{' '}
+                <button onClick={() => onNavigate('/legal')} className="underline hover:text-ink">
+                  Terms
+                </button>
+              </p>
 
               <div className="mt-8 flex flex-wrap gap-3">
                 <button onClick={() => onNavigate('/check')} className="btn-ink">

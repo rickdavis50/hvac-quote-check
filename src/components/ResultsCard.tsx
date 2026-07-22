@@ -47,6 +47,11 @@ export default function ResultsCard({ result, onCorrections, onUnlock, correctin
 
           <p className="max-w-[62ch] text-[14px] leading-relaxed text-ink-soft">{summary}</p>
 
+          <p className="max-w-[62ch] text-[11px] leading-snug text-ink-mute">
+            An informational estimate, not financial advice or a guaranteed price. Get independent
+            quotes and consult a licensed contractor before acting on it.
+          </p>
+
           <FairRangeBar low={fairRange.low} mid={fairRange.mid} high={fairRange.high} quoted={quotedTotal} />
 
           {/* The math, always in the open */}
