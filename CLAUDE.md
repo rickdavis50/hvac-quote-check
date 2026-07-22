@@ -44,7 +44,10 @@ number" relief on first load.
 4. Validation gates → KB write (`knowledge/raw/YYYY/MM/*.json`)
 5. `pricingEngine.ts`: baseline × metro index × tier × size × scope, blended with median of
    real user quotes (state+system, 180d) when n ≥ 5. See `METHODOLOGY_VERSION`.
-6. `analyzer.ts`: LLM narrative around the fixed numbers (template fallback without a key)
+6. `analyzer.ts`: LLM narrative around the fixed numbers (template fallback without a key).
+   **Executor/advisor:** both extraction + narrative run on `EXECUTOR_MODEL` (Sonnet 5,
+   `server/lib/llmExtraction.ts`) and only escalate to `ADVISOR_MODEL` (Opus 4.8) when
+   stuck (extraction: `isStuck` = no total / low confidence; narrative: hard parse fail).
 7. `submissionStore.ts`: one JSON per submission in `data/submissions/` (gitignored)
 
 **Fair price (no quote):** `server/lib/fairPrice.ts` → same normalize→price chain with
@@ -101,8 +104,9 @@ Fixtures: `public/fixtures/quotes/` — central-heatpump trio calibrated to Seat
 
 ## Gotchas
 
-1. **Never put sampling params (`temperature`) or `budget_tokens` on claude-opus-4-8
-   calls** — the API rejects them. Use `thinking: {type: 'adaptive'}`.
+1. **Never put sampling params (`temperature`) or `budget_tokens` on `claude-opus-4-8`
+   OR `claude-sonnet-5` calls** — both reject non-default sampling (400). Use
+   `thinking: {type: 'adaptive'}`. (Sonnet 5 is the executor; see pipeline step 6.)
 2. **Evals/tests must set `HVAC_DISABLE_KB_WRITES=1`** or they pollute `knowledge/raw/`
    (the dev server does NOT set it — delete any fixture entries you create by hand-testing).
 3. Changing `data/baselines.ts` changes ratings — re-run eval:analysis + localized-pricing.

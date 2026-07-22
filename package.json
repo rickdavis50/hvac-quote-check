@@ -17,6 +17,7 @@
     "eval:analysis": "tsx evals/analysis.test.ts",
     "eval:gates": "tsx evals/validation.test.ts",
     "eval:fair-price": "tsx evals/fair-price.test.ts",
+    "eval:executor-advisor": "tsx evals/executor-advisor.test.ts",
     "eval:e2e": "tsx evals/e2e.test.ts"
   },
   "dependencies": {

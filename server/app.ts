@@ -11,7 +11,7 @@ import metaRouter from './routes/meta.js';
 import mcpRouter from './routes/mcp.js';
 import { getKbStats } from './lib/knowledgeBase.js';
 import { METHODOLOGY_VERSION } from './lib/pricingEngine.js';
-import { EXTRACTION_MODEL } from './lib/llmExtraction.js';
+import { EXECUTOR_MODEL, ADVISOR_MODEL } from './lib/llmExtraction.js';
 import { mcpLimiter } from './lib/rateLimit.js';
 
 // The Express app, with no network binding — so it runs both as a long-lived
@@ -42,7 +42,8 @@ app.get('/api/health', (_req, res) => {
   res.json({
     ok: true,
     methodologyVersion: METHODOLOGY_VERSION,
-    model: EXTRACTION_MODEL,
+    model: EXECUTOR_MODEL,
+    models: { executor: EXECUTOR_MODEL, advisor: ADVISOR_MODEL },
     services: {
       claude: !!process.env.ANTHROPIC_API_KEY,
       stripe: !!process.env.STRIPE_SECRET_KEY,

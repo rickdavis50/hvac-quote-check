@@ -5,10 +5,13 @@ import type { AnalysisResult, PaidInsights, PricingResult } from '../types.js';
 import { priceQuote, type QuoteForPricing, type Comparable } from './pricingEngine.js';
 import { loadRawQuotes } from './knowledgeBase.js';
 import { COMPONENT_RANGES } from '../../data/baselines.js';
+import { EXECUTOR_MODEL, ADVISOR_MODEL } from './llmExtraction.js';
 
 const client = new Anthropic();
 
-export const NARRATIVE_MODEL = 'claude-opus-4-8';
+// Back-compat alias; the narrative runs on the executor and only escalates to
+// the advisor on a hard failure (see generateNarrative).
+export const NARRATIVE_MODEL = EXECUTOR_MODEL;
 
 const NarrativeSchema = z.object({
   summary: z.string(),
@@ -169,23 +172,33 @@ ${wantsPaidContent ? `- negotiationPoints: 4-6 specific, actionable talking poin
 - detailedExplanation: 1-2 paragraphs explaining where this quote is out of line and why, grounded only in the data above.` : `- negotiationPoints: null
 - detailedExplanation: null`}`;
 
-  try {
-    const message = await client.messages.parse({
-      model: NARRATIVE_MODEL,
-      max_tokens: 16000,
-      thinking: { type: 'adaptive' },
-      messages: [{ role: 'user', content: prompt }],
-      output_config: { format: zodOutputFormat(NarrativeSchema) },
-    });
-    if (message.parsed_output) return message.parsed_output;
-  } catch (err) {
-    console.warn('Narrative generation failed:', err instanceof Error ? err.message : err);
-  }
+  // Executor first (cheap); escalate to the advisor only if it hard-fails, then
+  // fall back to the deterministic template.
+  const executor = await parseNarrative(prompt, EXECUTOR_MODEL);
+  if (executor) return executor;
+  const advisor = await parseNarrative(prompt, ADVISOR_MODEL);
+  if (advisor) return advisor;
   return {
     summary: fallbackSummary(quote, pricing),
     negotiationPoints: null,
     detailedExplanation: null,
   };
+}
+
+async function parseNarrative(prompt: string, model: string): Promise<Narrative | null> {
+  try {
+    const message = await client.messages.parse({
+      model,
+      max_tokens: 16000,
+      thinking: { type: 'adaptive' },
+      messages: [{ role: 'user', content: prompt }],
+      output_config: { format: zodOutputFormat(NarrativeSchema) },
+    });
+    return message.parsed_output ?? null;
+  } catch (err) {
+    console.warn(`Narrative (${model}) failed:`, err instanceof Error ? err.message : err);
+    return null;
+  }
 }
 
 function fallbackSummary(quote: QuoteForPricing, pricing: PricingResult): string {
