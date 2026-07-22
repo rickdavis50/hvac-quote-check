@@ -61,7 +61,7 @@ const SECTIONS: Array<{ n: string; title: string; body: string[] }> = [
     n: '08',
     title: 'Limitation of liability',
     body: [
-      'To the maximum extent permitted by law, [ENTITY] and its owners, operators, and contributors will not be liable for any indirect, incidental, consequential, special, exemplary, or punitive damages, or for any loss of money, profits, or expected savings, arising out of or relating to your use of or reliance on the site or any estimate or content — including any decision to purchase or not purchase, any amount you paid a contractor, or any dispute with a third party — even if we were advised of the possibility.',
+      'To the maximum extent permitted by law, Alumni Founders, Inc. and its owners, operators, and contributors will not be liable for any indirect, incidental, consequential, special, exemplary, or punitive damages, or for any loss of money, profits, or expected savings, arising out of or relating to your use of or reliance on the site or any estimate or content — including any decision to purchase or not purchase, any amount you paid a contractor, or any dispute with a third party — even if we were advised of the possibility.',
       'Our total aggregate liability for any claim will not exceed the greater of (a) the amount you paid us for the specific service giving rise to the claim in the twelve months before the claim, or (b) US $50.',
     ],
   },
@@ -69,7 +69,7 @@ const SECTIONS: Array<{ n: string; title: string; body: string[] }> = [
     n: '09',
     title: 'Indemnification',
     body: [
-      'You agree to indemnify and hold harmless [ENTITY] from any claims, losses, or expenses arising out of your misuse of the site or your violation of these terms.',
+      'You agree to indemnify and hold harmless Alumni Founders, Inc. from any claims, losses, or expenses arising out of your misuse of the site or your violation of these terms.',
     ],
   },
   {
@@ -90,7 +90,7 @@ const SECTIONS: Array<{ n: string; title: string; body: string[] }> = [
     n: '12',
     title: 'Governing law',
     body: [
-      'These terms are governed by the laws of the State of [STATE], without regard to its conflict-of-laws rules. Any dispute will be brought exclusively in the state or federal courts located in [STATE].',
+      'These terms are governed by the laws of the State of California, without regard to its conflict-of-laws rules. Any dispute will be brought exclusively in the state or federal courts located in California.',
     ],
   },
 ];
@@ -101,7 +101,7 @@ export default function LegalPage({ onNavigate }: Props) {
       <div className="sheet mt-10">
         <div className="sheet-titleblock">
           <span>Sheet Nº 004 — terms &amp; disclaimer</span>
-          <span className="ml-auto">effective [EFFECTIVE DATE]</span>
+          <span className="ml-auto">effective July 21, 2026</span>
         </div>
 
         <div className="px-5 py-8 sm:px-8 sm:py-10">
@@ -109,7 +109,7 @@ export default function LegalPage({ onNavigate }: Props) {
             Terms &amp; Disclaimer
           </h1>
           <p className="mt-4 max-w-[68ch] text-[13px] leading-relaxed text-ink-soft">
-            Fair Air is operated by [ENTITY] (“we,” “us”). By using this site you agree to the
+            Fair Air is operated by Alumni Founders, Inc. (“we,” “us”). By using this site you agree to the
             terms below. Read them — they describe what our estimates are, what they are not,
             and the limits of our responsibility.
           </p>
@@ -137,7 +137,7 @@ export default function LegalPage({ onNavigate }: Props) {
                 <span>Contact</span>
               </h2>
               <p className="mt-3 text-[13px] leading-relaxed text-ink-soft">
-                Questions about these terms: [CONTACT EMAIL].
+                Questions about these terms: hello@alumnifounders.com.
               </p>
             </section>
           </div>
