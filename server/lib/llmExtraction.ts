@@ -6,13 +6,20 @@ import type { ExtractionInput } from './extraction.js';
 const client = new Anthropic();
 
 // Executor / advisor split (cost strategy). Sonnet 5 is the cheap workhorse
-// (~$2/$10 per M tok intro vs Opus 4.8's $5/$25); the pricier Opus is consulted
-// only when the executor is "stuck" (see isStuck). Neither model accepts
-// `temperature` (non-default sampling → 400) — use adaptive thinking instead.
+// (~$2/$10 per M tok intro vs Opus 4.8's $5/$25); it consults Opus mid-turn via
+// the native Advisor tool ONLY when it decides it needs strategic help — so the
+// Opus cost is paid only on the hard cases. Neither model accepts `temperature`
+// (non-default sampling → 400) — use adaptive thinking instead.
 export const EXECUTOR_MODEL = 'claude-sonnet-5';
 export const ADVISOR_MODEL = 'claude-opus-4-8';
 // Back-compat alias (the health route imports this).
 export const EXTRACTION_MODEL = EXECUTOR_MODEL;
+
+// The first-party Advisor tool: a higher-intelligence advisor the executor calls
+// when stuck. Beta (advisor_20260301); not yet in the SDK types, so the .parse
+// calls that use it are loosely typed — the zod schema still validates output.
+export const ADVISOR_BETA = 'advisor-tool-2026-03-01';
+export const ADVISOR_TOOL = { type: 'advisor_20260301', name: 'advisor', model: ADVISOR_MODEL };
 
 const ExtractionSchema = z.object({
   contractorName: z.string().nullable(),
@@ -82,46 +89,31 @@ function buildContent(input: ExtractionInput): Anthropic.ContentBlockParam[] {
   return content;
 }
 
-async function parseExtraction(
-  content: Anthropic.ContentBlockParam[],
-  model: string
-): Promise<LlmExtractionResult | null> {
+export async function extractWithLlm(input: ExtractionInput): Promise<LlmExtractionResult | null> {
+  if (!process.env.ANTHROPIC_API_KEY) return null;
+  const content = buildContent(input);
   try {
-    const message = await client.messages.parse({
-      model,
+    // Sonnet 5 executes; the Advisor tool lets it consult Opus 4.8 mid-turn when
+    // it needs help. The heuristic merge + no-key path still cover a failure here.
+    const message = await (client.beta.messages as unknown as {
+      parse: (params: unknown) => Promise<{ parsed_output: LlmExtractionResult | null }>;
+    }).parse({
+      model: EXECUTOR_MODEL,
       max_tokens: 16000,
       thinking: { type: 'adaptive' },
+      betas: [ADVISOR_BETA],
+      tools: [ADVISOR_TOOL],
       messages: [{ role: 'user', content }],
-      output_config: { format: zodOutputFormat(ExtractionSchema) },
+      // Low effort: extraction is mechanical field-reading, not deep reasoning —
+      // keeps latency under the serverless function limit. The advisor is still
+      // consulted when the model decides it needs it.
+      output_config: { format: zodOutputFormat(ExtractionSchema), effort: 'low' },
     });
     const parsed = message.parsed_output;
     if (!parsed) return null;
     return { ...parsed, zipCode: normalizeZip(parsed.zipCode) };
   } catch (err) {
-    console.warn(`LLM extraction (${model}) failed:`, err instanceof Error ? err.message : err);
+    console.warn('LLM extraction failed:', err instanceof Error ? err.message : err);
     return null;
   }
-}
-
-// "Stuck" = worth escalating to the pricier advisor: the executor failed, missed
-// the bottom-line total (the one field the pipeline requires), or reported low
-// confidence in its own read.
-export function isStuck(r: LlmExtractionResult | null): boolean {
-  if (!r) return true;
-  if (r.quotedTotal == null || r.quotedTotal <= 0) return true;
-  if (r.confidence < 0.55) return true;
-  return false;
-}
-
-export async function extractWithLlm(input: ExtractionInput): Promise<LlmExtractionResult | null> {
-  if (!process.env.ANTHROPIC_API_KEY) return null;
-  const content = buildContent(input);
-
-  // Executor first (cheap). Consult the advisor once only when it's stuck.
-  const executor = await parseExtraction(content, EXECUTOR_MODEL);
-  if (!isStuck(executor)) return executor;
-
-  const advisor = await parseExtraction(content, ADVISOR_MODEL);
-  if (advisor && !isStuck(advisor)) return advisor;
-  return advisor ?? executor;
 }

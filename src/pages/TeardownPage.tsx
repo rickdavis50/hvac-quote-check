@@ -63,7 +63,7 @@ export default function TeardownPage({ onNavigate }: Props) {
       {/* Chrome stays outside the scrubbed zone; both exits always reachable. */}
       <header className="fixed inset-x-0 top-0 z-30 flex items-baseline justify-between px-5 py-4 sm:px-8">
         <button onClick={() => onNavigate('/')} className="font-display text-xl italic tracking-tight text-paper">
-          Fair Air
+          Quote Check
         </button>
         <button
           onClick={() => goFairPrice()}

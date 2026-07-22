@@ -47,7 +47,7 @@ const analysisResultSchema = {
 const openapi = {
   openapi: '3.1.0',
   info: {
-    title: 'HVAC Quote Check API',
+    title: 'Quote Check API',
     version: METHODOLOGY_VERSION,
     description:
       'Upload or paste an HVAC quote; get a deterministic fair-price assessment for the local US market. ' +

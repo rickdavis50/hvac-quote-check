@@ -1,4 +1,4 @@
-# HVAC Quote Check
+# Quote Check
 
 > Free fair-price analysis for US HVAC quotes (heat pumps, AC, furnaces, mini-splits).
 > Send a quote; get a deterministic Low/Fair/High rating, a fair price range for the

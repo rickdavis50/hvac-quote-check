@@ -9,7 +9,7 @@ export default function TopBar({ onNavigate, dark = false }: Props) {
   return (
     <header className={`flex items-baseline justify-between px-5 py-4 sm:px-8 ${tone}`}>
       <button onClick={() => onNavigate('/')} className="font-display text-xl italic tracking-tight">
-        Fair Air
+        Quote Check
       </button>
       <nav className="flex items-baseline gap-5 text-[12px] sm:gap-7">
         <button onClick={() => onNavigate('/teardown')} className={`${mute} transition-colors`}>

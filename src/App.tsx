@@ -234,7 +234,7 @@ export default function App() {
 
       <footer className="border-t border-ink/15 px-5 py-6 text-[11px] text-ink-mute sm:px-8">
         <div className="mx-auto flex w-full max-w-6xl flex-wrap items-baseline gap-x-6 gap-y-2">
-          <span className="font-display text-sm italic text-ink">Fair Air</span>
+          <span className="font-display text-sm italic text-ink">Quote Check</span>
           <span>Deterministic fair pricing for US heat pumps and HVAC</span>
           <button onClick={() => navigate('/legal')} className="underline transition-colors hover:text-ink">
             Terms &amp; disclaimer

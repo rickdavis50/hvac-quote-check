@@ -10,7 +10,7 @@ const SECTIONS: Array<{ n: string; title: string; body: string[] }> = [
     n: '01',
     title: 'Who we are',
     body: [
-      'Fair Air is operated by Alumni Founders, Inc. (“we,” “us”), a California company. This policy explains what we collect when you use the site, how we use it, and the choices you have.',
+      'Quote Check is operated by Alumni Founders, Inc. (“we,” “us”), a California company. This policy explains what we collect when you use the site, how we use it, and the choices you have.',
     ],
   },
   {
@@ -84,7 +84,7 @@ const SECTIONS: Array<{ n: string; title: string; body: string[] }> = [
     n: '11',
     title: 'Children',
     body: [
-      'Fair Air is intended for adults making home-equipment decisions and is not directed to children. Please do not submit the personal information of anyone under 16.',
+      'Quote Check is intended for adults making home-equipment decisions and is not directed to children. Please do not submit the personal information of anyone under 16.',
     ],
   },
   {

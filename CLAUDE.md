@@ -1,4 +1,4 @@
-# Fair Air (hvac) — Operating Context
+# Quote Check (hvac) — Operating Context
 
 Heat-pump pricing-transparency product ("TrueCar for HVAC"): see the fair local price
 BEFORE any contractor quote, gouge-check a quote in hand, and learn the machine via a
@@ -46,8 +46,11 @@ number" relief on first load.
    real user quotes (state+system, 180d) when n ≥ 5. See `METHODOLOGY_VERSION`.
 6. `analyzer.ts`: LLM narrative around the fixed numbers (template fallback without a key).
    **Executor/advisor:** both extraction + narrative run on `EXECUTOR_MODEL` (Sonnet 5,
-   `server/lib/llmExtraction.ts`) and only escalate to `ADVISOR_MODEL` (Opus 4.8) when
-   stuck (extraction: `isStuck` = no total / low confidence; narrative: hard parse fail).
+   `server/lib/llmExtraction.ts`) via `client.beta.messages.parse` with the native
+   **Advisor tool** (`ADVISOR_TOOL`, beta `ADVISOR_BETA`) — the executor consults
+   `ADVISOR_MODEL` (Opus 4.8) mid-turn only when it decides it's stuck. The advisor tool
+   isn't in the SDK types yet, so those `.parse` calls are loosely typed (zod still
+   validates output). On any failure the heuristic merge / template fallback still cover.
 7. `submissionStore.ts`: one JSON per submission in `data/submissions/` (gitignored)
 
 **Fair price (no quote):** `server/lib/fairPrice.ts` → same normalize→price chain with

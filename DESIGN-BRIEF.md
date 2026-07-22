@@ -1,4 +1,4 @@
-# DESIGN BRIEF — Fair Air (HVAC price transparency)
+# DESIGN BRIEF — Quote Check (HVAC price transparency)
 
 The contract for every design decision in this repo. A build that contradicts this brief is
 off-spec even if it is pretty. Produced by the design method (Phases 0–5 below), fed by a

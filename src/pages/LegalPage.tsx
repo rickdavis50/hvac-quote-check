@@ -8,9 +8,9 @@ interface Props {
 const SECTIONS: Array<{ n: string; title: string; body: string[] }> = [
   {
     n: '01',
-    title: 'What Fair Air is — and is not',
+    title: 'What Quote Check is — and is not',
     body: [
-      'Fair Air provides algorithmically generated, informational price estimates and educational content about residential HVAC and heat-pump systems. The fair-price ranges are produced by a deterministic model from public and aggregated market data.',
+      'Quote Check provides algorithmically generated, informational price estimates and educational content about residential HVAC and heat-pump systems. The fair-price ranges are produced by a deterministic model from public and aggregated market data.',
       'These estimates are approximations and starting points for your own research. They are NOT professional, financial, investment, engineering, tax, or legal advice, and they are NOT a substitute for a licensed HVAC contractor’s on-site assessment or a written quote.',
     ],
   },
@@ -81,13 +81,21 @@ const SECTIONS: Array<{ n: string; title: string; body: string[] }> = [
   },
   {
     n: '11',
+    title: 'Purchases and refunds',
+    body: [
+      'Most of Quote Check is free. The optional detailed report is a one-time US $9 charge, processed by Stripe — there is no subscription and nothing auto-renews.',
+      'Because the report is delivered instantly as digital content, all sales are final and payments are non-refundable, except where a refund is required by law. If the report failed to generate, was not delivered, or you were charged in error, email us within 30 days and we will make it right.',
+    ],
+  },
+  {
+    n: '12',
     title: 'Changes',
     body: [
       'We may update these terms and the pricing methodology at any time. Material changes take effect when posted, and your continued use of the site means you accept them.',
     ],
   },
   {
-    n: '12',
+    n: '13',
     title: 'Governing law',
     body: [
       'These terms are governed by the laws of the State of California, without regard to its conflict-of-laws rules. Any dispute will be brought exclusively in the state or federal courts located in California.',
@@ -109,7 +117,7 @@ export default function LegalPage({ onNavigate }: Props) {
             Terms &amp; Disclaimer
           </h1>
           <p className="mt-4 max-w-[68ch] text-[13px] leading-relaxed text-ink-soft">
-            Fair Air is operated by Alumni Founders, Inc. (“we,” “us”). By using this site you agree to the
+            Quote Check is operated by Alumni Founders, Inc. (“we,” “us”). By using this site you agree to the
             terms below. Read them — they describe what our estimates are, what they are not,
             and the limits of our responsibility.
           </p>
@@ -133,7 +141,7 @@ export default function LegalPage({ onNavigate }: Props) {
 
             <section className="border-t border-ink/15 pt-5">
               <h2 className="flex gap-3 font-mono text-[12px] uppercase tracking-micro text-ink-mute">
-                <span className="text-copper-deep">13</span>
+                <span className="text-copper-deep">14</span>
                 <span>Contact</span>
               </h2>
               <p className="mt-3 text-[13px] leading-relaxed text-ink-soft">
