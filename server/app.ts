@@ -12,6 +12,7 @@ import mcpRouter from './routes/mcp.js';
 import { getKbStats } from './lib/knowledgeBase.js';
 import { METHODOLOGY_VERSION } from './lib/pricingEngine.js';
 import { EXECUTOR_MODEL, ADVISOR_MODEL } from './lib/llmExtraction.js';
+import { isSupabaseStore } from './lib/submissionStore.js';
 import { mcpLimiter } from './lib/rateLimit.js';
 
 // The Express app, with no network binding — so it runs both as a long-lived
@@ -47,6 +48,7 @@ app.get('/api/health', (_req, res) => {
     services: {
       claude: !!process.env.ANTHROPIC_API_KEY,
       stripe: !!process.env.STRIPE_SECRET_KEY,
+      supabase: isSupabaseStore,
     },
     kb: kbStats,
   });

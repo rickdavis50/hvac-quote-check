@@ -118,9 +118,12 @@ Fixtures: `public/fixtures/quotes/` — central-heatpump trio calibrated to Seat
 5. Vite dev port 5173 (auto-assigned if busy; `PORT` env respected); Express reads
    `API_PORT` first.
 6. Runtime state (`knowledge/`, `data/submissions/`) is gitignored. Persistence auto-selects:
-   set `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (+ optional `HVAC_SUBMISSIONS_TABLE`,
-   default `submissions`) and the submission store uses Supabase Postgres (Vercel/serverless);
-   otherwise it uses `HVAC_SUBMISSIONS_DIR` on disk (Railway/local). `server/app.ts` is the
-   Express app; `api/index.js` re-exports it as the Vercel function (`vercel.json`).
+   set `SUPABASE_URL` + a key — either `SUPABASE_SERVICE_ROLE_KEY` (legacy service_role JWT)
+   or `SUPABASE_SECRET_KEY` (modern `sb_secret_…`), the store accepts both — (+ optional
+   `HVAC_SUBMISSIONS_TABLE`, default `submissions`) and the submission store uses Supabase
+   Postgres (Vercel/serverless); otherwise it uses `HVAC_SUBMISSIONS_DIR` on disk
+   (Railway/local). `/api/health` `services.supabase` reports which mode is live — `false`
+   on serverless means writes will 500 (read-only disk). `server/app.ts` is the Express app;
+   `api/index.js` re-exports it as the Vercel function (`vercel.json`).
 7. Three.js stack pinned to React 18 line: `@react-three/fiber@8`, `@react-three/drei@9`,
    `three@0.169`. The teardown lazy-loads (`React.lazy`) so tool surfaces stay fast.

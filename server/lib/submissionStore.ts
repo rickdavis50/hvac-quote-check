@@ -11,11 +11,21 @@ import type { QuoteSubmission } from '../types.js';
 // Local / Railway: one JSON file per submission on a persistent disk.
 // The store is selected automatically by the presence of Supabase credentials.
 const SB_URL = process.env.SUPABASE_URL;
-const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+// Accept either name: SUPABASE_SERVICE_ROLE_KEY (legacy service_role JWT) or
+// SUPABASE_SECRET_KEY (the modern `sb_secret_…` API key). Both go in the same
+// createClient slot and are server-side-only secrets — RLS stays on and the
+// browser never sees this store.
+const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
 const supabase: SupabaseClient | null =
   SB_URL && SB_KEY
     ? createClient(SB_URL, SB_KEY, { auth: { persistSession: false, autoRefreshToken: false } })
     : null;
+
+// True when the store is Supabase-backed (URL + a key present), false in disk
+// mode. Exposed so /api/health can report the active persistence backend —
+// disk mode on read-only serverless is a misconfiguration that otherwise only
+// surfaces as a 500 on the first write.
+export const isSupabaseStore = supabase !== null;
 
 // Table name is overridable so the store can live in a shared project (namespaced,
 // e.g. hvac_submissions) or a dedicated one (submissions).
