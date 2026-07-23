@@ -15,6 +15,20 @@ const client = new Anthropic();
 // advisor (accuracy-critical; see llmExtraction).
 export const NARRATIVE_MODEL = EXECUTOR_MODEL;
 
+// Anti-slop voice rules folded into the narrative prompt so the generated prose
+// reads like a sharp human, not machine copy. Mirrors the "no AI slop" pattern
+// set (em-dashes, binary contrasts, throat-clearing, puffery, weasel sourcing, …).
+const ANTI_SLOP = `## Voice (write like a sharp human, not an AI)
+Avoid the tells of machine-written copy:
+- No em-dashes. Use periods and commas instead. (Number ranges like $12,000–$18,000 keep their en-dash.)
+- No "it's not X, it's Y" contrasts, and don't list what something isn't before saying what it is.
+- No throat-clearing ("Here's the thing", "Let's be clear") and no faux-insight ("What nobody tells you", "The truth is").
+- No colons that manufacture suspense, and no one-sentence fragments dropped for drama.
+- No importance puffery ("pivotal", "game-changer", "in today's landscape") and no vague sourcing ("experts agree", "studies show").
+- No inflated verbs ("serves as", "leverages", "delve", "unlock"). Use plain ones ("is", "uses", "cuts").
+- Don't restate the same point in new words, and don't end on a grand summary or a profound-sounding kicker.
+- Vary sentence length; avoid a run of identically shaped sentences. Lead with the verdict, use active voice, and prefer concrete numbers to adjectives.`;
+
 const NarrativeSchema = z.object({
   summary: z.string(),
   negotiationPoints: z.array(z.string()).nullable(),
@@ -111,7 +125,7 @@ function buildComponentBreakdown(quote: QuoteForPricing, pricing: PricingResult)
 function describeComparables(quote: QuoteForPricing, comparables: Comparable[]): string {
   const userComps = comparables.filter((c) => c.source === 'user');
   if (userComps.length === 0) {
-    return `No directly comparable homeowner quotes in ${quote.state} yet — pricing is anchored to national medians adjusted for your local market.`;
+    return `No directly comparable homeowner quotes in ${quote.state} yet. Pricing is anchored to national medians adjusted for your local market.`;
   }
   const totals = userComps.map((c) => c.quotedTotal).sort((a, b) => a - b);
   const median = totals[Math.floor(totals.length / 2)];
@@ -146,7 +160,7 @@ async function generateNarrative(
     .map((c) => `- ${c.category}: $${c.yourCost.toLocaleString()} vs typical $${c.typicalRange.low.toLocaleString()}-$${c.typicalRange.high.toLocaleString()} (${c.assessment})`)
     .join('\n') || 'No line items extracted.';
 
-  const prompt = `You are a consumer advocate explaining an HVAC quote assessment to a homeowner. The numbers below were computed deterministically from market data — treat them as fixed facts. Never invent or alter prices, ranges, or the rating.
+  const prompt = `You are a consumer advocate explaining an HVAC quote assessment to a homeowner. The numbers below were computed deterministically from market data. Treat them as fixed facts. Never invent or alter prices, ranges, or the rating.
 
 ## The quote
 - Total: $${quote.quotedTotal.toLocaleString()} from ${quote.contractorName ?? 'an unnamed contractor'}
@@ -166,6 +180,8 @@ ${componentTable}
 
 ## Comparable market data
 ${comparableSummary}
+
+${ANTI_SLOP}
 
 ## Your task
 Write for a homeowner with no HVAC background. Return:
@@ -206,7 +222,7 @@ function fallbackSummary(quote: QuoteForPricing, pricing: PricingResult): string
     return `${base} You could likely save around $${pricing.savingsPotential.toLocaleString()} by negotiating or getting competing bids.`;
   }
   if (pricing.rating === 'Low') {
-    return `${base} This is below the typical market price — verify the scope and warranty are what you expect, then it looks like a strong deal.`;
+    return `${base} This is below the typical market price. Verify the scope and warranty are what you expect, then it looks like a strong deal.`;
   }
   return `${base} This is a reasonable market price for the work described.`;
 }
@@ -216,11 +232,11 @@ function fallbackNegotiationPoints(quote: QuoteForPricing, pricing: PricingResul
     `Mention that comparable ${quote.systemType.replace(/_/g, ' ')} installs in your area run $${pricing.fairRange.low.toLocaleString()} – $${pricing.fairRange.high.toLocaleString()}, and ask the contractor to explain the difference.`,
     'Request an itemized breakdown of equipment, labor, and materials before signing.',
     'Get at least two competing bids for the identical scope and share the lowest with this contractor.',
-    'Ask whether the price includes permits, haul-away, and electrical work — and what each is worth.',
+    'Ask whether the price includes permits, haul-away, and electrical work, and what each is worth.',
     'Ask about current manufacturer rebates and utility incentives; these often are not passed through automatically.',
   ];
 }
 
 function fallbackExplanation(quote: QuoteForPricing, pricing: PricingResult): string {
-  return `This quote totals $${quote.quotedTotal.toLocaleString()}, which is $${(quote.quotedTotal - pricing.fairRange.high).toLocaleString()} above the top of the fair range for a ${quote.qualityTier}-tier ${quote.systemType.replace(/_/g, ' ')} in your market ($${pricing.fairRange.low.toLocaleString()} – $${pricing.fairRange.high.toLocaleString()}). The fair range accounts for local labor costs, equipment tier, system size, and the scope of work included. Prices above it usually reflect contractor margin rather than necessary cost — which is exactly where negotiation or a competing bid tends to work.`;
+  return `This quote totals $${quote.quotedTotal.toLocaleString()}, which is $${(quote.quotedTotal - pricing.fairRange.high).toLocaleString()} above the top of the fair range for a ${quote.qualityTier}-tier ${quote.systemType.replace(/_/g, ' ')} in your market ($${pricing.fairRange.low.toLocaleString()} – $${pricing.fairRange.high.toLocaleString()}). The fair range accounts for local labor costs, equipment tier, system size, and the scope of work included. Prices above it usually reflect contractor margin rather than necessary cost, which is exactly where negotiation or a competing bid tends to work.`;
 }

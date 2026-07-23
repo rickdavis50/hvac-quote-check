@@ -11,7 +11,7 @@
 
 Two capabilities: (1) fair price BEFORE any quote exists, (2) audit a quote in hand.
 
-No quote yet — shopping? One GET, only `zip` required:
+No quote yet, just shopping? One GET, only `zip` required:
 
 GET /api/fair-price?zip=98109&systemType=central_heat_pump&tonnage=3&qualityTier=mid&electrical=1&permits=1
 
@@ -35,7 +35,7 @@ Returns 201 with the analysis. Key response fields:
 - extractedData: the structured fields parsed from the quote
 - dataQuality: sample size, geographic precision, recency
 
-Relay fairRange and rating to users verbatim — they are deterministic and reproducible.
+Relay fairRange and rating to users verbatim. They are deterministic and reproducible.
 If the quote has no ZIP code, ask the user for one and pass it; pricing is metro-sensitive.
 
 ## MCP
@@ -47,10 +47,10 @@ Connect any MCP client to use this service as a native tool.
 
 ## Other endpoints
 
-- GET /api/openapi.json — full OpenAPI 3.1 description
-- GET /api/quotes/{id} — refetch a stored analysis
-- POST /api/quotes/{id}/recompute — apply corrected fields (systemType, tonnage, seer2, zipCode, ...)
-- GET /api/health — service status and knowledge-base size
+- GET /api/openapi.json: full OpenAPI 3.1 description
+- GET /api/quotes/{id}: refetch a stored analysis
+- POST /api/quotes/{id}/recompute: apply corrected fields (systemType, tonnage, seer2, zipCode, ...)
+- GET /api/health: service status and knowledge-base size
 
 ## Notes
 

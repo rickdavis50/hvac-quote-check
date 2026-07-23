@@ -103,7 +103,7 @@ export async function analyzeQuote(
   if (buffer.trim()) handleBlock(buffer);
 
   if (errorMessage) throw new Error(errorMessage);
-  if (!result) throw new Error('Analysis ended unexpectedly — please try again.');
+  if (!result) throw new Error('Analysis ended unexpectedly. Please try again.');
   return result;
 }
 
@@ -142,7 +142,7 @@ export async function unlockInsights(id: string): Promise<{ checkoutUrl?: string
 export async function getInsights(id: string): Promise<PaidInsights> {
   const res = await fetch(`${API_BASE}/quotes/${id}/insights`);
   if (!res.ok) {
-    if (res.status === 402) throw new Error('Payment is still processing — refresh this page in a moment.');
+    if (res.status === 402) throw new Error('Payment is still processing. Refresh this page in a moment.');
     throw new Error('Insights not available');
   }
   return res.json();

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FairPriceEstimate } from '../types';
 import { getFairPrice } from '../lib/api';
+import { track } from '../lib/analytics';
 import { writeFairPriceQuery, type FairPriceQuery } from '../lib/urlState';
 import { formatMoney } from '../lib/format';
 import FactorReceipt from './FactorReceipt';
@@ -34,13 +35,21 @@ export default function FairPriceTool({ initial, onNavigate }: Props) {
   const ranOnce = useRef(false);
 
   const run = useCallback(
-    async (params: FairPriceQuery) => {
+    async (params: FairPriceQuery, opts?: { isRefinement?: boolean }) => {
       setLoading(true);
       setError(null);
       try {
         const result = await getFairPrice(params);
         setEstimate(result);
         writeFairPriceQuery(params);
+        if (!opts?.isRefinement) {
+          track('fair_price_lookup', {
+            zip3: params.zip.slice(0, 3),
+            system: params.systemType,
+            tier: params.qualityTier,
+            tonnage: params.tonnage,
+          });
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Estimate failed');
       } finally {
@@ -66,7 +75,7 @@ export default function FairPriceTool({ initial, onNavigate }: Props) {
 
   // Refinements re-price instantly once a number exists.
   useEffect(() => {
-    if (estimate && /^\d{5}$/.test(zip)) void run(currentParams());
+    if (estimate && /^\d{5}$/.test(zip)) void run(currentParams(), { isRefinement: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [systemType, tonnage, qualityTier, ductwork, electrical, permits]);
 
@@ -91,7 +100,7 @@ export default function FairPriceTool({ initial, onNavigate }: Props) {
   return (
     <div className="sheet">
       <div className="sheet-titleblock">
-        <span>Sheet Nº 001 — fair price inquiry</span>
+        <span>Sheet Nº 002 · fair price inquiry</span>
         <span>engine: deterministic</span>
         {estimate && <span>method v{estimate.methodologyVersion}</span>}
         <span className="ml-auto">no phone number. ever.</span>
@@ -146,7 +155,7 @@ export default function FairPriceTool({ initial, onNavigate }: Props) {
               </p>
               <p className="mt-2 max-w-[52ch] text-[11px] leading-snug text-ink-mute">
                 An estimate, not financial advice or a quote. Actual prices vary by home and
-                contractor — verify with a licensed pro before you buy.{' '}
+                contractor. Verify with a licensed pro before you buy.{' '}
                 <button onClick={() => onNavigate('/legal')} className="underline hover:text-ink">
                   Terms
                 </button>
@@ -168,7 +177,7 @@ export default function FairPriceTool({ initial, onNavigate }: Props) {
               <fieldset className="mt-10 border-t border-ink/15 pt-6">
                 <legend className="sr-only">Refine the estimate</legend>
                 <p className="mb-4 text-[11px] uppercase tracking-micro text-ink-mute">
-                  Sharpen it — every change re-prices instantly
+                  Sharpen it. Every change re-prices instantly
                 </p>
                 <div className="flex flex-wrap gap-x-8 gap-y-4 text-[13px]">
                   <label className="block">

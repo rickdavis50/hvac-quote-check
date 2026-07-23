@@ -8,7 +8,7 @@ interface Props {
 const SECTIONS: Array<{ n: string; title: string; body: string[] }> = [
   {
     n: '01',
-    title: 'What Quote Check is — and is not',
+    title: 'What Quote Check is and is not',
     body: [
       'Quote Check provides algorithmically generated, informational price estimates and educational content about residential HVAC and heat-pump systems. The fair-price ranges are produced by a deterministic model from public and aggregated market data.',
       'These estimates are approximations and starting points for your own research. They are NOT professional, financial, investment, engineering, tax, or legal advice, and they are NOT a substitute for a licensed HVAC contractor’s on-site assessment or a written quote.',
@@ -25,7 +25,7 @@ const SECTIONS: Array<{ n: string; title: string; body: string[] }> = [
     n: '03',
     title: 'Estimates are not guarantees',
     body: [
-      'Actual installed prices depend on factors we cannot observe — your home, ductwork, electrical, permitting, equipment availability, labor markets, and individual contractor pricing — and will differ, sometimes significantly, from our ranges.',
+      'Actual installed prices depend on factors we cannot observe (your home, ductwork, electrical, permitting, equipment availability, labor markets, and individual contractor pricing) and will differ, sometimes significantly, from our ranges.',
       'We do not guarantee that any estimate reflects a price you can actually obtain, or that a quote we label “Low,” “Fair,” or “High” is in fact low, fair, or high for your specific situation.',
     ],
   },
@@ -40,7 +40,7 @@ const SECTIONS: Array<{ n: string; title: string; body: string[] }> = [
     n: '05',
     title: 'Do your own diligence',
     body: [
-      'Always obtain multiple written quotes and consult licensed, insured professionals before purchasing, financing, or signing anything. Use our estimates to inform the questions you ask — not to replace professional judgment.',
+      'Always obtain multiple written quotes and consult licensed, insured professionals before purchasing, financing, or signing anything. Use our estimates to inform the questions you ask, not to replace professional judgment.',
     ],
   },
   {
@@ -54,14 +54,14 @@ const SECTIONS: Array<{ n: string; title: string; body: string[] }> = [
     n: '07',
     title: 'Provided “as is,” no warranties',
     body: [
-      'The site and all content are provided “as is” and “as available,” without warranties of any kind, express or implied — including accuracy, completeness, merchantability, fitness for a particular purpose, and non-infringement — to the fullest extent permitted by law.',
+      'The site and all content are provided “as is” and “as available,” without warranties of any kind, express or implied (including accuracy, completeness, merchantability, fitness for a particular purpose, and non-infringement), to the fullest extent permitted by law.',
     ],
   },
   {
     n: '08',
     title: 'Limitation of liability',
     body: [
-      'To the maximum extent permitted by law, Alumni Founders, Inc. and its owners, operators, and contributors will not be liable for any indirect, incidental, consequential, special, exemplary, or punitive damages, or for any loss of money, profits, or expected savings, arising out of or relating to your use of or reliance on the site or any estimate or content — including any decision to purchase or not purchase, any amount you paid a contractor, or any dispute with a third party — even if we were advised of the possibility.',
+      'To the maximum extent permitted by law, Alumni Founders, Inc. and its owners, operators, and contributors will not be liable for any indirect, incidental, consequential, special, exemplary, or punitive damages, or for any loss of money, profits, or expected savings, arising out of or relating to your use of or reliance on the site or any estimate or content (including any decision to purchase or not purchase, any amount you paid a contractor, or any dispute with a third party), even if we were advised of the possibility.',
       'Our total aggregate liability for any claim will not exceed the greater of (a) the amount you paid us for the specific service giving rise to the claim in the twelve months before the claim, or (b) US $50.',
     ],
   },
@@ -83,7 +83,7 @@ const SECTIONS: Array<{ n: string; title: string; body: string[] }> = [
     n: '11',
     title: 'Purchases and refunds',
     body: [
-      'Most of Quote Check is free. The optional detailed report is a one-time US $9 charge, processed by Stripe — there is no subscription and nothing auto-renews.',
+      'Most of Quote Check is free. The optional detailed report is a one-time US $9 charge, processed by Stripe. There is no subscription and nothing auto-renews.',
       'Because the report is delivered instantly as digital content, all sales are final and payments are non-refundable, except where a refund is required by law. If the report failed to generate, was not delivered, or you were charged in error, email us within 30 days and we will make it right.',
     ],
   },
@@ -108,7 +108,7 @@ export default function LegalPage({ onNavigate }: Props) {
     <div className="mx-auto w-full max-w-3xl px-5 pb-24 sm:px-8">
       <div className="sheet mt-10">
         <div className="sheet-titleblock">
-          <span>Sheet Nº 004 — terms &amp; disclaimer</span>
+          <span>Sheet Nº 004 · terms &amp; disclaimer</span>
           <span className="ml-auto">effective July 21, 2026</span>
         </div>
 
@@ -118,7 +118,7 @@ export default function LegalPage({ onNavigate }: Props) {
           </h1>
           <p className="mt-4 max-w-[68ch] text-[13px] leading-relaxed text-ink-soft">
             Quote Check is operated by Alumni Founders, Inc. (“we,” “us”). By using this site you agree to the
-            terms below. Read them — they describe what our estimates are, what they are not,
+            terms below. Read them. They describe what our estimates are, what they are not,
             and the limits of our responsibility.
           </p>
 

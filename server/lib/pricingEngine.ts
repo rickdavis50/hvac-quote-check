@@ -37,7 +37,7 @@ export function priceQuote(quote: QuoteForPricing, comparables: Comparable[]): P
     label: 'Local market',
     detail: cbsaEntry
       ? `${cbsaEntry.name} labor and cost-of-living index`
-      : 'No metro match — national average assumed',
+      : 'No metro match, national average assumed',
     multiplier: compositeIndex,
   });
 

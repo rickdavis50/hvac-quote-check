@@ -54,7 +54,7 @@ Guidance:
 - quotedTotal is the bottom-line price in dollars. Prefer "total"/"grand total"/"amount due" over subtotals.
 - systemType: "central_heat_pump" for ducted heat pumps, "heat_pump_split" for heat pump + air handler split systems described as such, "mini_split" for ductless, "furnace_ac_split" for furnace+AC combos.
 - qualityTierHint: judge from brand and specs (e.g. Carrier/Trane/Lennox/Daikin/Mitsubishi premium; Goodman/Payne budget).
-- zipCode: the 5-digit US ZIP of the customer's home / installation service address. Every quote shows the property address — read the ZIP from it. If both a contractor office address and a customer address appear, use the customer/service/install address, never the contractor's.
+- zipCode: the 5-digit US ZIP of the customer's home / installation service address. Every quote shows the property address. Read the ZIP from it. If both a contractor office address and a customer address appear, use the customer/service/install address, never the contractor's.
 - lineItems: one entry per priced line on the quote.
 - confidence: 0 to 1, your honest confidence in this extraction overall.
 - Use null for anything not stated. Never invent values.`;

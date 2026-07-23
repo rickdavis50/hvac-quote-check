@@ -9,7 +9,7 @@ export default function PaidInsights({ insights }: Props) {
   return (
     <div className="sheet">
       <div className="sheet-titleblock">
-        <span>Sheet Nº 003 — the itemized case</span>
+        <span>Sheet Nº 003 · the itemized case</span>
         <span className="ml-auto">paid report</span>
       </div>
 

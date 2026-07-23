@@ -5,6 +5,7 @@ export type Route =
   | { page: 'home' }
   | { page: 'teardown' }
   | { page: 'check' }
+  | { page: 'guide' }
   | { page: 'legal' }
   | { page: 'privacy' }
   | { page: 'result'; id: string; paidReturn: boolean };
@@ -18,6 +19,7 @@ export function parseRoute(): Route {
   }
   if (path.startsWith('/teardown')) return { page: 'teardown' };
   if (path.startsWith('/check')) return { page: 'check' };
+  if (path.startsWith('/guide')) return { page: 'guide' };
   if (path.startsWith('/legal')) return { page: 'legal' };
   if (path.startsWith('/privacy')) return { page: 'privacy' };
   return { page: 'home' };

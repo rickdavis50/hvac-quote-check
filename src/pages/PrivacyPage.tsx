@@ -17,8 +17,9 @@ const SECTIONS: Array<{ n: string; title: string; body: string[] }> = [
     n: '02',
     title: 'What we collect',
     body: [
-      'Information you submit: the quote documents or text you upload or paste. These may contain personal information — a job-site address or ZIP code, a contractor’s name, and occasionally a homeowner’s name — along with the equipment and price details we analyze.',
+      'Information you submit: the quote documents or text you upload or paste. These may contain personal information (a job-site address or ZIP code, a contractor’s name, and occasionally a homeowner’s name) along with the equipment and price details we analyze.',
       'Information collected automatically: standard log and device data (such as IP address and browser type) when you use the site, via our hosting provider.',
+      'Analytics: we use Google Analytics to understand, in aggregate, how the site is used (pages viewed, approximate location, device). It sets first-party cookies and shares usage data with Google as our processor. We configure it for measurement only. IP addresses are truncated and Google’s advertising and cross-site signals are turned off, so your visit is not used to build ad profiles. If your browser sends a Global Privacy Control or Do Not Track signal, we do not load analytics at all.',
       'Payment information: if you buy a report, payment is processed by Stripe. We do not receive or store your full card number.',
     ],
   },
@@ -40,7 +41,7 @@ const SECTIONS: Array<{ n: string; title: string; body: string[] }> = [
     n: '05',
     title: 'Who we share it with',
     body: [
-      'We share information only with service providers who process it on our behalf, under contracts that limit them to that purpose: Anthropic (quote reading), Stripe (payments), Supabase (secure storage of your submission), and Vercel (hosting).',
+      'We share information only with service providers who process it on our behalf, under contracts that limit them to that purpose: Anthropic (quote reading), Stripe (payments), Supabase (secure storage of your submission), Vercel (hosting), and Google (privacy-configured analytics).',
       'We do NOT sell your personal information, and we do NOT share it for cross-context behavioral advertising. We may disclose information if required by law or to protect our rights.',
     ],
   },
@@ -63,14 +64,14 @@ const SECTIONS: Array<{ n: string; title: string; body: string[] }> = [
     n: '08',
     title: 'Do Not Track',
     body: [
-      'We do not track you across other websites for advertising, and we do not serve targeted ads. Because there is no industry-standard response, we do not currently respond to browser “Do Not Track” signals.',
+      'We do not track you across other websites for advertising, and we do not serve targeted ads. We honor the Global Privacy Control (GPC) and browser “Do Not Track” signals for analytics: when either is present, we do not load Google Analytics or set any measurement cookies.',
     ],
   },
   {
     n: '09',
     title: 'Security',
     body: [
-      'We use reasonable safeguards — encryption in transit, access-restricted storage that is not exposed to the public, and server-side-only credentials for the data store. No method of transmission or storage is completely secure, and we cannot guarantee absolute security.',
+      'We use reasonable safeguards: encryption in transit, access-restricted storage that is not exposed to the public, and server-side-only credentials for the data store. No method of transmission or storage is completely secure, and we cannot guarantee absolute security.',
     ],
   },
   {
@@ -101,7 +102,7 @@ export default function PrivacyPage({ onNavigate }: Props) {
     <div className="mx-auto w-full max-w-3xl px-5 pb-24 sm:px-8">
       <div className="sheet mt-10">
         <div className="sheet-titleblock">
-          <span>Sheet Nº 005 — privacy policy</span>
+          <span>Sheet Nº 005 · privacy policy</span>
           <span className="ml-auto">effective July 21, 2026</span>
         </div>
 
@@ -110,7 +111,7 @@ export default function PrivacyPage({ onNavigate }: Props) {
             Privacy Policy
           </h1>
           <p className="mt-4 max-w-[68ch] text-[13px] leading-relaxed text-ink-soft">
-            We ask for as little as possible — a ZIP code, or a quote you choose to share — and we
+            We ask for as little as possible: a ZIP code, or a quote you choose to share. We
             never sell it. This policy is the detail behind that.
           </p>
 

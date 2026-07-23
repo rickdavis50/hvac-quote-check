@@ -51,7 +51,7 @@ function buildServer(): McpServer {
       description:
         'Get the fair installed-price range for an HVAC system in a US ZIP code BEFORE any contractor quote exists. ' +
         'Call this when a user is shopping for a heat pump, AC, or furnace and wants to know what a fair price is in their area. ' +
-        'Deterministic — no quote text needed. Returns the fair low/mid/high range plus the factor-by-factor math.',
+        'Deterministic, no quote text needed. Returns the fair low/mid/high range plus the factor-by-factor math.',
       inputSchema: {
         zip: z.string().describe('5-digit US ZIP code of the job site'),
         systemType: z

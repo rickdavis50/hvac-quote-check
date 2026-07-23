@@ -24,8 +24,8 @@ export const CHAPTERS: Chapter[] = [
     title: "It moves heat. It doesn't make it.",
     body:
       'A furnace burns fuel to create heat. This machine pumps existing heat from one ' +
-      'place to another through that copper loop — one unit of electricity in, roughly ' +
-      'three units of heat moved. And the cold-weather story your brother-in-law tells is ' +
+      'place to another through that copper loop, moving roughly three units of heat for ' +
+      'every one unit of electricity in. And the cold-weather story your brother-in-law tells is ' +
       'a decade old: modern cold-climate units hold their output far below freezing.',
   },
   {
@@ -34,7 +34,7 @@ export const CHAPTERS: Chapter[] = [
     body:
       'The heart, and the priciest organ: a sealed pump that squeezes refrigerant vapor ' +
       'so it carries heat uphill. Variable-speed compressors are why premium models cost ' +
-      'more — they modulate quietly instead of slamming on and off.',
+      'more. They modulate quietly instead of slamming on and off.',
     priceLine: 'typical part cost: $1,200–$2,800',
   },
   {
@@ -70,7 +70,7 @@ export const CHAPTERS: Chapter[] = [
     body:
       'Compressor, coils, valve, fan, board, cabinet: roughly $3,200 to $4,500 in parts. ' +
       'The average installed quote is $15,393. The difference is real labor, real ' +
-      'overhead — and a margin that swings by thousands for the same job. The margin is ' +
+      'overhead, and a margin that swings by thousands for the same job. The margin is ' +
       'where you negotiate.',
     priceLine: 'parts ≈ $3,200–$4,500 · average quote $15,393',
   },
@@ -80,7 +80,7 @@ export const CHAPTERS: Chapter[] = [
     body:
       'For honesty’s sake: contractors target about 50% gross margin, overhead eats ' +
       '25–40% of their revenue, and most net 10–20%. Fair doesn’t mean ' +
-      'free — it means priced like the machine is knowable. Now go get the other number: ' +
+      'free. It means priced like the machine is knowable. Now go get the other number: ' +
       'what this job should cost in your ZIP code.',
   },
 ];

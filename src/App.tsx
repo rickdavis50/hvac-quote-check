@@ -8,12 +8,14 @@ import PaidInsights from './components/PaidInsights';
 import Landing from './pages/Landing';
 import LegalPage from './pages/LegalPage';
 import PrivacyPage from './pages/PrivacyPage';
+import NegotiationGuide from './pages/NegotiationGuide';
 import { analyzeQuote, getQuote, recomputeQuote, unlockInsights, getInsights, type AnalyzeInput, type StageEvent } from './lib/api';
 import { parseRoute, pushRoute, pushResultUrl, resultShareLink, readFairPriceQuery, type Route } from './lib/urlState';
+import { initAnalytics, track, trackPageView } from './lib/analytics';
 
 const TeardownPage = lazy(() => import('./pages/TeardownPage'));
 
-type CheckPhase = 'input' | 'processing';
+export type CheckPhase = 'input' | 'processing';
 
 export default function App() {
   const [route, setRoute] = useState<Route>(() => parseRoute());
@@ -28,8 +30,15 @@ export default function App() {
 
   const navigate = useCallback((path: string) => {
     setError(null);
-    pushRoute(path);
+    const [pathname, hash] = path.split('#');
+    pushRoute(pathname || '/');
     setRoute(parseRoute());
+    // Anchor targets (e.g. /#fair-price) scroll into view once the route renders.
+    if (hash) {
+      requestAnimationFrame(() =>
+        document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      );
+    }
   }, []);
 
   const loadStored = useCallback(async (id: string, paidReturn: boolean) => {
@@ -68,15 +77,32 @@ export default function App() {
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
+  // Analytics: init once, then a page_view (plus entry events) per route.
+  useEffect(() => {
+    initAnalytics();
+  }, []);
+
+  useEffect(() => {
+    trackPageView(window.location.pathname);
+    if (route.page === 'teardown') track('teardown_enter');
+    if (route.page === 'guide') track('guide_view');
+  }, [route]);
+
   const handleSubmit = useCallback(async (input: AnalyzeInput) => {
     setError(null);
     setCheckPhase('processing');
     setStage(null);
+    track('quote_submit', { input_type: input.file ? 'file' : 'text' });
     try {
       const analysis = await analyzeQuote(input, (event) => setStage(event.stage));
       setResult(analysis);
       setPaidInsightsData(analysis.paidInsights);
       setCheckPhase('input');
+      track('quote_result', {
+        rating: analysis.rating,
+        quoted_total: analysis.quotedTotal,
+        savings_potential: analysis.savingsPotential,
+      });
       pushResultUrl(analysis.submissionId);
       setRoute(parseRoute());
     } catch (err) {
@@ -92,6 +118,7 @@ export default function App() {
       const updated = await recomputeQuote(result.submissionId, corrections);
       setResult(updated);
       setPaidInsightsData(updated.paidInsights);
+      track('quote_recompute', { rating: updated.rating });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Recompute failed');
     } finally {
@@ -101,6 +128,7 @@ export default function App() {
 
   const handleUnlock = useCallback(async () => {
     if (!result) return;
+    track('unlock_click', { savings_potential: result.savingsPotential });
     try {
       const response = await unlockInsights(result.submissionId);
       if (response.alreadyPaid) {
@@ -152,12 +180,20 @@ export default function App() {
 
       <main className="flex-1">
         {route.page === 'home' && (
-          <Landing initialQuery={readFairPriceQuery()} onNavigate={navigate} />
+          <Landing
+            initialQuery={readFairPriceQuery()}
+            onNavigate={navigate}
+            onSubmit={handleSubmit}
+            checkPhase={checkPhase}
+            stage={stage}
+          />
         )}
 
         {route.page === 'legal' && <LegalPage onNavigate={navigate} />}
 
         {route.page === 'privacy' && <PrivacyPage onNavigate={navigate} />}
+
+        {route.page === 'guide' && <NegotiationGuide onNavigate={navigate} />}
 
         {route.page === 'check' && (
           <div className="mx-auto w-full max-w-3xl px-5 pb-24 sm:px-8">
@@ -236,6 +272,9 @@ export default function App() {
         <div className="mx-auto flex w-full max-w-6xl flex-wrap items-baseline gap-x-6 gap-y-2">
           <span className="font-display text-sm italic text-ink">Quote Check</span>
           <span>Deterministic fair pricing for US heat pumps and HVAC</span>
+          <button onClick={() => navigate('/guide')} className="underline transition-colors hover:text-ink">
+            Negotiation guide
+          </button>
           <button onClick={() => navigate('/legal')} className="underline transition-colors hover:text-ink">
             Terms &amp; disclaimer
           </button>
@@ -243,7 +282,7 @@ export default function App() {
             Privacy
           </button>
           <span className="ml-auto">
-            AI agents welcome —{' '}
+            AI agents welcome:{' '}
             <a href="/llms.txt" className="underline hover:text-ink">llms.txt</a> ·{' '}
             <a href="/api/openapi.json" className="underline hover:text-ink">OpenAPI</a> ·{' '}
             <a href="/api/mcp" className="underline hover:text-ink">MCP</a>

@@ -95,7 +95,7 @@ const openapi = {
     },
     '/api/fair-price': {
       get: {
-        summary: 'Fair installed-price range with NO quote — shop before contractors name a number',
+        summary: 'Fair installed-price range with NO quote. Shop before contractors name a number',
         description:
           'Deterministic fair low/mid/high for a system type in a ZIP code, with the factor-by-factor math. ' +
           'No LLM, no quote text. Only `zip` is required; everything else defaults sensibly ' +

@@ -40,7 +40,7 @@ export default function QuoteInput({ onSubmit }: Props) {
   return (
     <div className="sheet">
       <div className="sheet-titleblock">
-        <span>Sheet Nº 002 — quote dissection</span>
+        <span>Sheet Nº 001 · quote dissection</span>
         <span className="ml-auto">PDF · photo · text</span>
       </div>
 

@@ -50,7 +50,7 @@ export default function SavingsTeaser({ savingsPotential, onUnlock }: Props) {
             Which line items are inflated, by how much, and the exact sentences to say before you sign.
           </p>
           <button onClick={onUnlock} className="btn-ink mt-5">
-            Open the full report — $9
+            Open the full report · $9
           </button>
           <p className="mt-2 text-[11px] text-ink-faint">
             One payment. No account, no subscription, no phone number.
