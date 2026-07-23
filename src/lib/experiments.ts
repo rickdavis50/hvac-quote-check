@@ -16,6 +16,8 @@ export interface Experiment {
 // Active experiments live here. Add one, use its key in a component, done.
 export const EXPERIMENTS = {
   hero_copy: { key: 'hero_copy', variants: ['control', 'benefit'] },
+  // Which quote-input tab a visitor lands on — does paste-first lift submissions vs upload-first?
+  quote_input_default: { key: 'quote_input_default', variants: ['file', 'text'] },
 } satisfies Record<string, Experiment>;
 
 export type ExperimentKey = keyof typeof EXPERIMENTS;

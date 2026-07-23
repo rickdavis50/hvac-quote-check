@@ -9,6 +9,7 @@ import paymentsRouter from './routes/payments.js';
 import adminRouter from './routes/admin.js';
 import metaRouter from './routes/meta.js';
 import mcpRouter from './routes/mcp.js';
+import seoRouter from './routes/seo.js';
 import { getKbStats } from './lib/knowledgeBase.js';
 import { METHODOLOGY_VERSION } from './lib/pricingEngine.js';
 import { EXECUTOR_MODEL, ADVISOR_MODEL } from './lib/llmExtraction.js';
@@ -59,6 +60,9 @@ app.get('/api/health', (_req, res) => {
 app.get('/llms.txt', (_req, res) => {
   res.sendFile(join(process.cwd(), 'public', 'llms.txt'));
 });
+
+// Programmatic SEO pages + sitemap/robots (server-rendered; before the SPA fallback).
+app.use(seoRouter);
 
 // Serve the built frontend when this app IS the whole service (local/Railway).
 // On Vercel the CDN serves dist/client and this function is only invoked for

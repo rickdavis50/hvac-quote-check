@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import type { AnalyzeInput } from '../lib/api';
+import { useExperiment } from '../lib/experiments';
 
 interface Props {
   onSubmit: (input: AnalyzeInput) => void;
@@ -8,7 +9,8 @@ interface Props {
 type Mode = 'file' | 'text';
 
 export default function QuoteInput({ onSubmit }: Props) {
-  const [mode, setMode] = useState<Mode>('file');
+  const defaultMode: Mode = useExperiment('quote_input_default') === 'text' ? 'text' : 'file';
+  const [mode, setMode] = useState<Mode>(defaultMode);
   const [dragOver, setDragOver] = useState(false);
   const [text, setText] = useState('');
 

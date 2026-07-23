@@ -11,6 +11,10 @@
   },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api" },
+    { "source": "/cost", "destination": "/api" },
+    { "source": "/cost/(.*)", "destination": "/api" },
+    { "source": "/sitemap.xml", "destination": "/api" },
+    { "source": "/robots.txt", "destination": "/api" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

@@ -275,6 +275,9 @@ export default function App() {
           <button onClick={() => navigate('/guide')} className="underline transition-colors hover:text-ink">
             Negotiation guide
           </button>
+          <a href="/cost" className="underline transition-colors hover:text-ink">
+            Cost by city
+          </a>
           <button onClick={() => navigate('/legal')} className="underline transition-colors hover:text-ink">
             Terms &amp; disclaimer
           </button>
